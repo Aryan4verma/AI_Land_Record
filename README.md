@@ -233,10 +233,19 @@ The same validation and review workflow used by the application
 The important distinction is:
 
 Demo Mode
-Controlled fixture → normal backend workflow
 
+Controlled fixture
+       ↓
+Normal backend workflow
 Live Mode
-Real document → OCR → AI extraction → normal backend workflow
+
+Real document
+       ↓
+OCR
+       ↓
+AI extraction
+       ↓
+Normal backend workflow
 
 Demo Mode is intended for demonstration and testing. It is not presented as a replacement for live document processing.
 
@@ -361,34 +370,21 @@ Ai-land-records/
 ├── tests/
 │   └── Automated tests
 │
-├── screenshots/
-│   └── Application screenshots
-│
 ├── README.md
+├── data_processing.png
+├── home_page.png
+├── login_page.png
 └── ...
 
 The exact repository structure may contain additional implementation and configuration files.
 
 Screenshots
-
-Screenshots will be added to this section as the repository documentation is completed.
-
-Login
-
-Dashboard
-
-Document Upload
-
-Processing
-
-Extraction Result
-
-Human Review
-
-Approved Record
-
-Audit Trail
-
+Login Page
+<img src="./login_page.png" alt="Login Page" width="900">
+Home Page
+<img src="./home_page.png" alt="Home Page" width="900">
+Data Processing
+<img src="./data_processing.png" alt="Data Processing" width="900">
 API and Backend
 
 The backend is implemented using FastAPI and exposes REST endpoints for the application's workflow.
@@ -510,18 +506,3 @@ License
 This project was developed as part of Smart India Hackathon 2026.
 
 Add the project's license information here if a formal open-source license is selected.
-
-## Screenshots
-
-### Login Page
-
-![Login Page](login_page.png)
-
-### Home Page
-
-![Home Page](home_page.png)
-
-### Data Processing
-
-![Data Processing](data_processing.png)
-
