@@ -1,0 +1,55 @@
+/* Review workspace + modal — Stitch a002d440 two-pane layout.
+ * Low-confidence treatment: confidence text + tone badge only, never
+ * whole-row red washes.
+ */
+.review-top-actions { display: flex; gap: var(--space-sm); align-items: center; }
+.rfield {
+  border: 1px solid var(--border);
+  border-radius: var(--r-default);
+  padding: var(--space-sm) var(--space-md);
+  margin-bottom: var(--space-sm);
+}
+.rfield:last-child { margin-bottom: 0; }
+.rfield-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm);
+}
+.rfield-label { font-weight: 600; font-size: var(--text-body-md); }
+.rfield-tools { display: flex; gap: var(--space-base); margin-top: 4px; align-items: center; }
+.rfield-tools .muted { font-size: var(--text-label-md); }
+.rfield form { margin-top: var(--space-sm); }
+
+/* ---- Modal ---- */
+.modal-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-base);
+  background: rgba(7, 12, 24, 0.5);
+}
+.modal {
+  width: 100%;
+  max-width: 32rem;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-3);
+  padding: var(--space-lg);
+}
+.modal-title { margin: 0 0 var(--space-sm); font-size: var(--text-headline-sm); line-height: var(--lh-headline-sm); }
+.modal-body { font-size: var(--text-body-md); color: var(--ink-2); }
+.modal-body p { margin: 0 0 var(--space-sm); }
+.modal-facts {
+  margin: var(--space-base) 0;
+  padding: var(--space-sm) var(--space-md);
+  background: var(--bg-canvas);
+  border: 1px solid var(--border);
+  border-radius: var(--r-default);
+  font-size: var(--text-body-sm);
+}
+.modal-actions { display: flex; justify-content: flex-end; gap: var(--space-sm); margin-top: var(--space-lg); }

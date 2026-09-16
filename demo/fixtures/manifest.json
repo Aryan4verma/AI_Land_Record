@@ -1,0 +1,19 @@
+{
+  "manifest_version": "1",
+  "note": "Demo Mode fixtures. A document is recognised by SHA-256 of its bytes, never by filename, so a renamed copy still matches and an unrelated file never does.",
+  "fixtures": [
+    {
+      "fixture_id": "doc10_rtc_hindi_scan",
+      "sha256": "6dd632cdeddfc7e78138cf818ab9396730f77b6092eced7b5618a51b140fd9f5",
+      "original_filename": "doc10_rtc_hindi_scan.pdf",
+      "byte_size": 624612,
+      "page_count": 1,
+      "fixture_version": "1",
+      "schema_version": "1",
+      "document": "doc10_rtc_hindi_scan/document.pdf",
+      "ocr_result": "doc10_rtc_hindi_scan/ocr_result.json",
+      "extraction_result": "doc10_rtc_hindi_scan/extraction_result.json",
+      "description": "SPECIMEN Record of Rights (Hindi/English), rendered as a worn scan. Fictitious authority, names and identifiers."
+    }
+  ]
+}

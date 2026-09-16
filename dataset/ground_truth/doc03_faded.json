@@ -1,0 +1,19 @@
+{
+  "id": "doc03_faded",
+  "text": "SAMPLE LAND RECORD - FOR TESTING ONLY\nDistrict: Demo District\nTehsil: Demo Tehsil\nVillage: Demo Village\nKhata Number: 123\nKhasra Number: 78\nSurvey Number: 145/2\nOwner Name: Ramesh Kumar\nFather Name: Suresh Kumar\nArea: 2.45 Hectare\nLand Classification: Agricultural\nMutation Number: M-2024-0091\nRecord Date: 2024-03-15",
+  "lines": [
+    "SAMPLE LAND RECORD - FOR TESTING ONLY",
+    "District: Demo District",
+    "Tehsil: Demo Tehsil",
+    "Village: Demo Village",
+    "Khata Number: 123",
+    "Khasra Number: 78",
+    "Survey Number: 145/2",
+    "Owner Name: Ramesh Kumar",
+    "Father Name: Suresh Kumar",
+    "Area: 2.45 Hectare",
+    "Land Classification: Agricultural",
+    "Mutation Number: M-2024-0091",
+    "Record Date: 2024-03-15"
+  ]
+}

@@ -1,0 +1,103 @@
+{
+  "id": "doc02_noisy",
+  "source_ocr_file": "dataset\\raw_documents\\doc02_noisy.png",
+  "ocr_engine": "tesseract",
+  "ocr_engine_version": "5.4.0.20240606",
+  "ocr_pages": 1,
+  "failed": false,
+  "error_code": null,
+  "error_message": null,
+  "provider": "gemini",
+  "model": "gemini-3.6-flash",
+  "prompt_version": "v1",
+  "schema_version": "v1",
+  "elapsed_seconds": 45.83,
+  "fields": {
+    "owner_name": {
+      "value": "Ramesh Kumar",
+      "confidence": 0.99,
+      "status": "EXTRACTED"
+    },
+    "father_or_spouse_name": {
+      "value": "Suresh Kumar",
+      "confidence": 0.99,
+      "status": "EXTRACTED"
+    },
+    "survey_number": {
+      "value": "4145/2",
+      "confidence": 0.99,
+      "status": "EXTRACTED"
+    },
+    "khasra_number": {
+      "value": "78",
+      "confidence": 0.99,
+      "status": "EXTRACTED"
+    },
+    "khata_number": {
+      "value": "123",
+      "confidence": 0.99,
+      "status": "EXTRACTED"
+    },
+    "area": {
+      "value": "2.45",
+      "confidence": 0.99,
+      "status": "EXTRACTED"
+    },
+    "area_unit": {
+      "value": "Hectare",
+      "confidence": 0.99,
+      "status": "EXTRACTED"
+    },
+    "village": {
+      "value": "Demo Village",
+      "confidence": 0.99,
+      "status": "EXTRACTED"
+    },
+    "tehsil": {
+      "value": "Demo Tehsil",
+      "confidence": 0.99,
+      "status": "EXTRACTED"
+    },
+    "district": {
+      "value": "Demo District",
+      "confidence": 0.99,
+      "status": "EXTRACTED"
+    },
+    "land_classification": {
+      "value": "Agricultural",
+      "confidence": 0.99,
+      "status": "EXTRACTED"
+    },
+    "mutation_number": {
+      "value": "M-2024-0091",
+      "confidence": 0.99,
+      "status": "EXTRACTED"
+    },
+    "registration_number": {
+      "value": null,
+      "confidence": null,
+      "status": "MISSING"
+    },
+    "record_date": {
+      "value": "2024-03-15",
+      "confidence": 0.99,
+      "status": "EXTRACTED"
+    }
+  },
+  "values": {
+    "owner_name": "Ramesh Kumar",
+    "father_or_spouse_name": "Suresh Kumar",
+    "survey_number": "4145/2",
+    "khasra_number": "78",
+    "khata_number": "123",
+    "area": "2.45",
+    "area_unit": "Hectare",
+    "village": "Demo Village",
+    "tehsil": "Demo Tehsil",
+    "district": "Demo District",
+    "land_classification": "Agricultural",
+    "mutation_number": "M-2024-0091",
+    "registration_number": null,
+    "record_date": "2024-03-15"
+  }
+}

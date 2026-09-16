@@ -1,0 +1,76 @@
+/* Global baseline.
+ *
+ * The design system lives in styles/tokens.css; this file only resets the
+ * document and keeps the handful of legacy utility classes still referenced by
+ * views. It deliberately declares NO font, colour or background of its own —
+ * a second global baseline here previously competed with the token layer.
+ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Honour the reader's preference: motion is decoration, never information. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ---- legacy utilities still referenced by views ---- */
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: var(--space-lg);
+}
+
+.card.narrow {
+  max-width: 32rem;
+  margin: var(--space-2xl) auto;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+}
+
+.muted {
+  color: var(--muted);
+  font-size: var(--text-body-sm);
+  line-height: var(--lh-body-sm);
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: 0.125rem var(--space-sm);
+  border-radius: var(--r-default);
+  border: 1px solid var(--border);
+  background: var(--surface-muted);
+  color: var(--ink-2);
+  font-size: var(--text-label-md);
+  line-height: var(--lh-label-md);
+  font-weight: var(--fw-medium);
+}

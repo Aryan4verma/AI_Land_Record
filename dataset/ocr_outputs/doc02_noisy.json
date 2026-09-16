@@ -1,0 +1,147 @@
+{
+  "engine": "tesseract",
+  "engine_version": "5.4.0.20240606",
+  "source_file": "dataset\\raw_documents\\doc02_noisy.png",
+  "elapsed_seconds": 0.717,
+  "pages": [
+    {
+      "page_number": 1,
+      "text": "SAMPLE LAND RECORD - FOR TESTING ONLY\nDistrict: Demo District\nTehsil: Demo Tehsil\nVillage: Demo Village\nKhata Number: 123\nKhasra Number: 78\nSurvey Number: 4145/2\nOwner Name: Ramesh Kumar\nFather Name: Suresh Kumar\nArea: 2.45 Hectare\nLand Classification: Agricultural\nMutation Number: M-2024-0091\nRecord Date: 2024-03-15",
+      "confidence": 0.9309340659340659,
+      "lines": [
+        {
+          "text": "SAMPLE LAND RECORD - FOR TESTING ONLY",
+          "confidence": 0.9471428571428572,
+          "box": [
+            129.0,
+            158.0,
+            1150.0,
+            235.0
+          ]
+        },
+        {
+          "text": "District: Demo District",
+          "confidence": 0.9466666666666667,
+          "box": [
+            132.0,
+            252.0,
+            571.0,
+            303.0
+          ]
+        },
+        {
+          "text": "Tehsil: Demo Tehsil",
+          "confidence": 0.9533333333333333,
+          "box": [
+            133.0,
+            321.0,
+            538.0,
+            371.0
+          ]
+        },
+        {
+          "text": "Village: Demo Village",
+          "confidence": 0.96,
+          "box": [
+            135.0,
+            391.0,
+            573.0,
+            444.0
+          ]
+        },
+        {
+          "text": "Khata Number: 123",
+          "confidence": 0.9500000000000001,
+          "box": [
+            141.0,
+            466.0,
+            540.0,
+            516.0
+          ]
+        },
+        {
+          "text": "Khasra Number: 78",
+          "confidence": 0.9466666666666667,
+          "box": [
+            144.0,
+            534.0,
+            542.0,
+            584.0
+          ]
+        },
+        {
+          "text": "Survey Number: 4145/2",
+          "confidence": 0.6833333333333332,
+          "box": [
+            147.0,
+            595.0,
+            606.0,
+            656.0
+          ]
+        },
+        {
+          "text": "Owner Name: Ramesh Kumar",
+          "confidence": 0.9575,
+          "box": [
+            150.0,
+            674.0,
+            767.0,
+            728.0
+          ]
+        },
+        {
+          "text": "Father Name: Suresh Kumar",
+          "confidence": 0.9575,
+          "box": [
+            154.0,
+            737.0,
+            743.0,
+            797.0
+          ]
+        },
+        {
+          "text": "Area: 2.45 Hectare",
+          "confidence": 0.9366666666666666,
+          "box": [
+            155.0,
+            819.0,
+            542.0,
+            865.0
+          ]
+        },
+        {
+          "text": "Land Classification: Agricultural",
+          "confidence": 0.96,
+          "box": [
+            159.0,
+            868.0,
+            800.0,
+            933.0
+          ]
+        },
+        {
+          "text": "Mutation Number: M-2024-0091",
+          "confidence": 0.9433333333333334,
+          "box": [
+            163.0,
+            948.0,
+            808.0,
+            1010.0
+          ]
+        },
+        {
+          "text": "Record Date: 2024-03-15",
+          "confidence": 0.96,
+          "box": [
+            166.0,
+            1022.0,
+            685.0,
+            1077.0
+          ]
+        }
+      ],
+      "width": 1848,
+      "height": 1203
+    }
+  ]
+}

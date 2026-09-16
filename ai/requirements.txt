@@ -1,0 +1,12 @@
+# AI/OCR POC environment (separate from backend/.venv to keep the API lean).
+# Windows PowerShell, from repo root:
+#   python -m venv ai\.venv
+#   .\\ai\\.venv\\Scripts\\Activate.ps1
+#   pip install -r ai\requirements.txt
+# Plus the Tesseract 5 binary (UB-Mannheim build):
+#   winget install -e --id UB-Mannheim.TesseractOCR
+# No model downloads needed; `eng` traineddata ships with the installer.
+pytesseract>=0.3,<0.4
+pymupdf>=1.24,<2
+pillow>=10,<12
+numpy>=1.26,<3

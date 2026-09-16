@@ -1,0 +1,19 @@
+SOURCE NOTE — step08_bad ground truth (dataset_v1, added 2026-09-05)
+
+These two files (step08_bad.json, step08_bad_record.json) were transcribed
+by a human from the document's OCR reading (dataset/ocr_outputs/
+step08_bad.json), NOT typed while viewing the source PDF. The OCR text was
+clean and complete (21 lines, high confidence), so transcription risk is
+low, but this is weaker than independent source annotation.
+
+Status: provisional. Before any final reported metrics, a human must check
+these values against dataset/raw_documents/
+step08_intentionally_bad_land_record.pdf directly and delete this note.
+
+Correction 2026-09-05 (independent verification): the source PDF reads
+"Father / Spouse Name:" — "Soouse" was a Tesseract misread that the
+transcription had copied verbatim, making that benchmark line circular.
+step08_bad.json now says "Spouse" to match the source. The structured
+record (father_or_spouse_name "Suresh Kumar") was always correct.
+The source-PDF direct check for the remaining lines is still owed before
+final reported metrics; then delete this note.

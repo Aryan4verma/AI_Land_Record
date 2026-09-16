@@ -1,0 +1,156 @@
+{
+  "version": "dataset_v1",
+  "documents": [
+    {
+      "id": "doc01_clean",
+      "file": "raw_documents/doc01_clean.pdf",
+      "ground_truth": "ground_truth/doc01_clean.json",
+      "difficulty": "EASY",
+      "attributes": [
+        "printed"
+      ]
+    },
+    {
+      "id": "doc02_noisy",
+      "file": "raw_documents/doc02_noisy.png",
+      "ground_truth": "ground_truth/doc02_noisy.json",
+      "difficulty": "MEDIUM",
+      "attributes": [
+        "printed",
+        "noisy",
+        "skewed"
+      ]
+    },
+    {
+      "id": "doc03_faded",
+      "file": "raw_documents/doc03_faded.png",
+      "ground_truth": "ground_truth/doc03_faded.json",
+      "difficulty": "HARD",
+      "attributes": [
+        "printed",
+        "faded",
+        "low-contrast"
+      ]
+    },
+    {
+      "id": "step08_bad",
+      "file": "raw_documents/step08_intentionally_bad_land_record.pdf",
+      "ground_truth": "ground_truth/step08_bad.json",
+      "difficulty": "HARD",
+      "attributes": [
+        "printed",
+        "challenging"
+      ]
+    },
+    {
+      "id": "doc04_hindi",
+      "file": "raw_documents/doc04_hindi.png",
+      "ground_truth": "ground_truth/doc04_hindi.json",
+      "difficulty": "EASY",
+      "language": "hin",
+      "attributes": [
+        "printed",
+        "devanagari"
+      ],
+      "purpose": "development-fixture"
+    },
+    {
+      "id": "doc05_gujarati",
+      "file": "raw_documents/doc05_gujarati.png",
+      "ground_truth": "ground_truth/doc05_gujarati.json",
+      "difficulty": "EASY",
+      "language": "guj",
+      "attributes": [
+        "printed",
+        "gujarati"
+      ],
+      "purpose": "development-fixture"
+    },
+    {
+      "id": "doc06_mixed_en_hi",
+      "file": "raw_documents/doc06_mixed_en_hi.png",
+      "ground_truth": "ground_truth/doc06_mixed_en_hi.json",
+      "difficulty": "EASY",
+      "language": "eng+hin",
+      "attributes": [
+        "printed",
+        "mixed-script"
+      ],
+      "purpose": "development-fixture"
+    },
+    {
+      "id": "doc07_mixed_en_gu",
+      "file": "raw_documents/doc07_mixed_en_gu.png",
+      "ground_truth": "ground_truth/doc07_mixed_en_gu.json",
+      "difficulty": "EASY",
+      "language": "eng+guj",
+      "attributes": [
+        "printed",
+        "mixed-script"
+      ],
+      "purpose": "development-fixture"
+    },
+    {
+      "id": "doc08_rtc_hindi",
+      "file": "raw_documents/doc08_rtc_hindi.pdf",
+      "ground_truth": "ground_truth/doc08_rtc_hindi.json",
+      "difficulty": "MEDIUM",
+      "language": "hin+eng",
+      "attributes": [
+        "printed",
+        "security-background",
+        "stamp-overlay",
+        "bilingual"
+      ],
+      "purpose": "development-fixture"
+    },
+    {
+      "id": "doc09_rtc_gujarati",
+      "file": "raw_documents/doc09_rtc_gujarati.pdf",
+      "ground_truth": "ground_truth/doc09_rtc_gujarati.json",
+      "difficulty": "MEDIUM",
+      "language": "guj+eng",
+      "attributes": [
+        "printed",
+        "security-background",
+        "stamp-overlay",
+        "bilingual"
+      ],
+      "purpose": "development-fixture"
+    },
+    {
+      "id": "doc10_rtc_hindi_scan",
+      "file": "raw_documents/doc10_rtc_hindi_scan.pdf",
+      "ground_truth": "ground_truth/doc10_rtc_hindi_scan.json",
+      "difficulty": "HARD",
+      "language": "hin+eng",
+      "attributes": [
+        "printed",
+        "security-background",
+        "stamp-overlay",
+        "bilingual",
+        "skewed",
+        "noisy",
+        "low-contrast"
+      ],
+      "purpose": "development-fixture"
+    },
+    {
+      "id": "doc11_rtc_gujarati_scan",
+      "file": "raw_documents/doc11_rtc_gujarati_scan.pdf",
+      "ground_truth": "ground_truth/doc11_rtc_gujarati_scan.json",
+      "difficulty": "HARD",
+      "language": "guj+eng",
+      "attributes": [
+        "printed",
+        "security-background",
+        "stamp-overlay",
+        "bilingual",
+        "skewed",
+        "noisy",
+        "low-contrast"
+      ],
+      "purpose": "development-fixture"
+    }
+  ]
+}

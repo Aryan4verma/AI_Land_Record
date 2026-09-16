@@ -1,0 +1,124 @@
+{
+  "reference": {
+    "source": "demo-seed",
+    "version": "v1"
+  },
+  "results": [
+    {
+      "id": "doc01_clean",
+      "difficulty": "EASY",
+      "verdict": "REVIEW_REQUIRED",
+      "approval_blocked": true,
+      "duplicate_check": "POSSIBLE_DUPLICATE",
+      "duplicate_matches": [
+        "145/2",
+        "145/2"
+      ],
+      "issues": [
+        {
+          "rule_id": "DUP_CANDIDATE_001",
+          "field": "survey_number",
+          "status": "REVIEW_REQUIRED",
+          "severity": "WARNING",
+          "message": "Possible duplicate: survey number '145/2' in village 'Demo Village' matches 2 existing record(s). This is a review prompt, not a fraud finding — the same parcel may legitimately be re-digitized. Reviewer: compare against the matched record(s) before approving."
+        }
+      ]
+    },
+    {
+      "id": "doc02_noisy",
+      "difficulty": "MEDIUM",
+      "verdict": "READY_FOR_APPROVAL",
+      "approval_blocked": false,
+      "duplicate_check": "NO_MATCH",
+      "duplicate_matches": [],
+      "issues": []
+    },
+    {
+      "id": "doc03_faded",
+      "difficulty": "HARD",
+      "verdict": "REVIEW_REQUIRED",
+      "approval_blocked": true,
+      "duplicate_check": "POSSIBLE_DUPLICATE",
+      "duplicate_matches": [
+        "145/2",
+        "145/2"
+      ],
+      "issues": [
+        {
+          "rule_id": "DUP_CANDIDATE_001",
+          "field": "survey_number",
+          "status": "REVIEW_REQUIRED",
+          "severity": "WARNING",
+          "message": "Possible duplicate: survey number '145/2' in village 'Demo Village' matches 2 existing record(s). This is a review prompt, not a fraud finding — the same parcel may legitimately be re-digitized. Reviewer: compare against the matched record(s) before approving."
+        }
+      ]
+    },
+    {
+      "id": "step08_bad",
+      "difficulty": "HARD",
+      "verdict": "BLOCKED",
+      "approval_blocked": true,
+      "duplicate_check": "POSSIBLE_DUPLICATE",
+      "duplicate_matches": [
+        "145/2",
+        "145/2"
+      ],
+      "issues": [
+        {
+          "rule_id": "REQ_OWNER_NAME_001",
+          "field": "owner_name",
+          "status": "REVIEW_REQUIRED",
+          "severity": "WARNING",
+          "message": "Owner name is required but missing. Field: owner_name. The document is expected to contain it. Reviewer: check the source document for the owner name."
+        },
+        {
+          "rule_id": "FMT_AREA_002",
+          "field": "area",
+          "status": "FAIL",
+          "severity": "ERROR",
+          "message": "Area must be positive (got 0). Field: area. Zero or negative areas are never valid land areas. Reviewer: verify the area figure against the source document."
+        },
+        {
+          "rule_id": "FMT_UNIT_001",
+          "field": "area_unit",
+          "status": "WARNING",
+          "severity": "WARNING",
+          "message": "Area unit 'bigha' is not in the known list (hectare, acre, sqm). Field: area_unit. Regional units vary, so this is a review prompt, not a rejection. Reviewer: confirm the unit as written in the source document."
+        },
+        {
+          "rule_id": "FMT_DATE_001",
+          "field": "record_date",
+          "status": "WARNING",
+          "severity": "WARNING",
+          "message": "Record date '99/99/2024' is not in a recognized format. Field: record_date. The raw value was preserved unchanged. Reviewer: confirm the intended date from the source document."
+        },
+        {
+          "rule_id": "REF_TEHSIL_001",
+          "field": "tehsil",
+          "status": "REVIEW_REQUIRED",
+          "severity": "WARNING",
+          "message": "Tehsil 'Wrong Tehsil' is not in reference demo-seed version v1. Field: tehsil. Reviewer: check the spelling against the source document."
+        },
+        {
+          "rule_id": "REF_GEO_CHAIN_001",
+          "field": "tehsil",
+          "status": "REVIEW_REQUIRED",
+          "severity": "WARNING",
+          "message": "Village 'Demo Village' belongs to tehsil 'demo tehsil' per reference data, but the record says 'Wrong Tehsil'. Field: tehsil. Reviewer: determine which tehsil the source document actually states."
+        },
+        {
+          "rule_id": "DUP_CANDIDATE_001",
+          "field": "survey_number",
+          "status": "REVIEW_REQUIRED",
+          "severity": "WARNING",
+          "message": "Possible duplicate: survey number '145/2' in village 'Demo Village' matches 2 existing record(s). This is a review prompt, not a fraud finding — the same parcel may legitimately be re-digitized. Reviewer: compare against the matched record(s) before approving."
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "ready": 1,
+    "review": 2,
+    "blocked": 1
+  }
+}

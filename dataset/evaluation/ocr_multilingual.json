@@ -1,0 +1,246 @@
+{
+  "note": "Synthetic development fixtures. See dataset/ground_truth/MULTILINGUAL_NOTE.txt — these results do NOT measure real scanned-document accuracy.",
+  "documents": [
+    {
+      "id": "doc01_clean",
+      "script": "english",
+      "before": {
+        "cer": 0.0,
+        "wer": 0.0,
+        "lang": "eng",
+        "seconds": 0.32,
+        "chars": 317
+      },
+      "after": {
+        "cer": 0.0,
+        "wer": 0.0,
+        "lang": "eng",
+        "seconds": 1.58,
+        "chars": 317,
+        "detection": "codepoints",
+        "preprocess": []
+      },
+      "truth_chars": 317
+    },
+    {
+      "id": "doc02_noisy",
+      "script": "english",
+      "before": {
+        "cer": 0.0032,
+        "wer": 0.0222,
+        "lang": "eng",
+        "seconds": 0.61,
+        "chars": 318
+      },
+      "after": {
+        "cer": 0.0032,
+        "wer": 0.0222,
+        "lang": "eng",
+        "seconds": 2.57,
+        "chars": 318,
+        "detection": "codepoints",
+        "preprocess": []
+      },
+      "truth_chars": 317
+    },
+    {
+      "id": "doc03_faded",
+      "script": "english",
+      "before": {
+        "cer": 0.0,
+        "wer": 0.0,
+        "lang": "eng",
+        "seconds": 0.31,
+        "chars": 317
+      },
+      "after": {
+        "cer": 0.0,
+        "wer": 0.0,
+        "lang": "eng",
+        "seconds": 1.58,
+        "chars": 317,
+        "detection": "codepoints",
+        "preprocess": [
+          "contrast"
+        ]
+      },
+      "truth_chars": 317
+    },
+    {
+      "id": "doc04_hindi",
+      "script": "hindi",
+      "before": {
+        "cer": 0.6973,
+        "wer": 0.8511,
+        "lang": "eng",
+        "seconds": 0.24,
+        "chars": 220
+      },
+      "after": {
+        "cer": 0.0238,
+        "wer": 0.0851,
+        "lang": "hin",
+        "seconds": 1.79,
+        "chars": 292,
+        "detection": "codepoints",
+        "preprocess": [
+          "upscale"
+        ]
+      },
+      "truth_chars": 294
+    },
+    {
+      "id": "doc05_gujarati",
+      "script": "gujarati",
+      "before": {
+        "cer": 0.6797,
+        "wer": 0.8667,
+        "lang": "eng",
+        "seconds": 0.25,
+        "chars": 226
+      },
+      "after": {
+        "cer": 0.0071,
+        "wer": 0.0222,
+        "lang": "guj",
+        "seconds": 1.79,
+        "chars": 282,
+        "detection": "codepoints",
+        "preprocess": [
+          "upscale"
+        ]
+      },
+      "truth_chars": 281
+    },
+    {
+      "id": "doc06_mixed_en_hi",
+      "script": "mixed-hi",
+      "before": {
+        "cer": 0.1906,
+        "wer": 0.2667,
+        "lang": "eng",
+        "seconds": 0.29,
+        "chars": 282
+      },
+      "after": {
+        "cer": 0.0535,
+        "wer": 0.1556,
+        "lang": "hin+eng",
+        "seconds": 2.4,
+        "chars": 293,
+        "detection": "codepoints",
+        "preprocess": [
+          "upscale"
+        ]
+      },
+      "truth_chars": 299
+    },
+    {
+      "id": "doc07_mixed_en_gu",
+      "script": "mixed-gu",
+      "before": {
+        "cer": 0.1873,
+        "wer": 0.2667,
+        "lang": "eng",
+        "seconds": 0.27,
+        "chars": 284
+      },
+      "after": {
+        "cer": 0.0,
+        "wer": 0.0,
+        "lang": "guj+eng",
+        "seconds": 1.97,
+        "chars": 299,
+        "detection": "codepoints",
+        "preprocess": [
+          "upscale"
+        ]
+      },
+      "truth_chars": 299
+    },
+    {
+      "id": "doc08_rtc_hindi",
+      "script": "rtc-hi",
+      "before": {
+        "cer": 0.4284,
+        "wer": 0.5931,
+        "lang": "eng",
+        "seconds": 0.97,
+        "chars": 1129
+      },
+      "after": {
+        "cer": 0.369,
+        "wer": 0.5833,
+        "lang": "hin+eng",
+        "seconds": 5.31,
+        "chars": 1163,
+        "detection": "codepoints",
+        "preprocess": []
+      },
+      "truth_chars": 1180
+    },
+    {
+      "id": "doc09_rtc_gujarati",
+      "script": "rtc-gu",
+      "before": {
+        "cer": 0.4301,
+        "wer": 0.5961,
+        "lang": "eng",
+        "seconds": 0.97,
+        "chars": 1135
+      },
+      "after": {
+        "cer": 0.3658,
+        "wer": 0.5813,
+        "lang": "guj+eng",
+        "seconds": 4.65,
+        "chars": 1159,
+        "detection": "codepoints",
+        "preprocess": []
+      },
+      "truth_chars": 1171
+    },
+    {
+      "id": "doc10_rtc_hindi_scan",
+      "script": "rtc-hi-scan",
+      "before": {
+        "cer": 0.1491,
+        "wer": 0.3235,
+        "lang": "eng",
+        "seconds": 1.2,
+        "chars": 1121
+      },
+      "after": {
+        "cer": 0.0526,
+        "wer": 0.2843,
+        "lang": "hin+eng",
+        "seconds": 6.13,
+        "chars": 1154,
+        "detection": "codepoints",
+        "preprocess": []
+      },
+      "truth_chars": 1180
+    },
+    {
+      "id": "doc11_rtc_gujarati_scan",
+      "script": "rtc-gu-scan",
+      "before": {
+        "cer": 0.1746,
+        "wer": 0.3399,
+        "lang": "eng",
+        "seconds": 1.19,
+        "chars": 1092
+      },
+      "after": {
+        "cer": 0.0712,
+        "wer": 0.2857,
+        "lang": "guj+eng",
+        "seconds": 6.0,
+        "chars": 1117,
+        "detection": "codepoints",
+        "preprocess": []
+      },
+      "truth_chars": 1171
+    }
+  ]
+}

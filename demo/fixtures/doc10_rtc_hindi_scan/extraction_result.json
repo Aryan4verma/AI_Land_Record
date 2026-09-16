@@ -1,0 +1,103 @@
+{
+  "fixture_id": "doc10_rtc_hindi_scan",
+  "schema_version": "1",
+  "provider": "gemini",
+  "model": "gemini-3.6-flash",
+  "prompt_version": "v1",
+  "schema_version_provider": "v1",
+  "elapsed_seconds": 44.97263480000038,
+  "attempted_routes": [
+    {
+      "provider": "gemini",
+      "model": "gemini-3.6-flash",
+      "outcome": "ok",
+      "attempts": 1
+    }
+  ],
+  "fields": {
+    "owner_name": {
+      "value": "Ramesh Kumar Patel",
+      "confidence": 0.99,
+      "source_text": null,
+      "extraction_status": "EXTRACTED"
+    },
+    "father_or_spouse_name": {
+      "value": "Suresh Kumar Patel",
+      "confidence": 0.99,
+      "source_text": null,
+      "extraction_status": "EXTRACTED"
+    },
+    "survey_number": {
+      "value": "445/2",
+      "confidence": 0.99,
+      "source_text": null,
+      "extraction_status": "EXTRACTED"
+    },
+    "khasra_number": {
+      "value": "76",
+      "confidence": 0.99,
+      "source_text": null,
+      "extraction_status": "EXTRACTED"
+    },
+    "khata_number": {
+      "value": "23",
+      "confidence": 0.99,
+      "source_text": null,
+      "extraction_status": "EXTRACTED"
+    },
+    "area": {
+      "value": "2.45",
+      "confidence": 0.99,
+      "source_text": null,
+      "extraction_status": "EXTRACTED"
+    },
+    "area_unit": {
+      "value": "Hectare",
+      "confidence": 0.99,
+      "source_text": null,
+      "extraction_status": "EXTRACTED"
+    },
+    "village": {
+      "value": "Demo Village",
+      "confidence": 0.99,
+      "source_text": null,
+      "extraction_status": "EXTRACTED"
+    },
+    "tehsil": {
+      "value": "Demo Tehsil",
+      "confidence": 0.99,
+      "source_text": null,
+      "extraction_status": "EXTRACTED"
+    },
+    "district": {
+      "value": "Demo District",
+      "confidence": 0.99,
+      "source_text": null,
+      "extraction_status": "EXTRACTED"
+    },
+    "land_classification": {
+      "value": "Agricultural / कृषि",
+      "confidence": 0.99,
+      "source_text": null,
+      "extraction_status": "EXTRACTED"
+    },
+    "mutation_number": {
+      "value": "M-2024-0094",
+      "confidence": 0.99,
+      "source_text": null,
+      "extraction_status": "EXTRACTED"
+    },
+    "registration_number": {
+      "value": null,
+      "confidence": null,
+      "source_text": null,
+      "extraction_status": "MISSING"
+    },
+    "record_date": {
+      "value": "2024-03-05",
+      "confidence": 0.99,
+      "source_text": null,
+      "extraction_status": "EXTRACTED"
+    }
+  }
+}

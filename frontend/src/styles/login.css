@@ -1,0 +1,385 @@
+/* Login screen — Stitch "Intelligent Land Record Digitization - Login Screen"
+ * (1a3bd1dbc5a14deda00bd6d93824e86a). Split composition: deep-navy brand
+ * panel + white authentication panel. All values from styles/tokens.css.
+ */
+.login {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+}
+
+/* ---- Brand panel ---- */
+.login-brand {
+  position: relative;
+  overflow: hidden;
+  background: var(--navy-950);
+  color: #fff;
+  border-bottom: 1px solid var(--navy-800);
+  padding: var(--space-xl);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: var(--space-xl);
+  min-height: 32rem;
+}
+.login-brand-grid {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.8;
+}
+.login-brand-vectors {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.25;
+  pointer-events: none;
+}
+.login-brand > :not(.login-brand-grid):not(.login-brand-vectors) {
+  position: relative;
+  z-index: 1;
+}
+.login-brandmark {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+.login-brandmark-badge {
+  width: 2.25rem;
+  height: 2.25rem;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--navy-900);
+  border: 1px solid var(--navy-700);
+  border-radius: var(--r-default);
+  color: #f1f5f9;
+}
+.login-brandmark-badge svg { width: 1.25rem; height: 1.25rem; }
+.login-brandmark-name {
+  font-size: var(--text-body-md);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #f1f5f9;
+}
+.login-brandmark-sub {
+  font-size: var(--text-label-md);
+  color: #94a3b8;
+  margin-top: 2px;
+}
+.login-ps-chip {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  margin-left: var(--space-sm);
+  border-radius: var(--r-default);
+  background: var(--navy-800);
+  border: 1px solid var(--navy-700);
+  color: #cbd5e1;
+  vertical-align: 1px;
+}
+.login-env-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: 4px 10px;
+  margin-bottom: var(--space-lg);
+  font-family: var(--font-mono);
+  font-size: var(--text-label-sm);
+  color: #cbd5e1;
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid var(--navy-700);
+  border-radius: var(--r-default);
+}
+.login-env-dot {
+  width: 6px;
+  height: 6px;
+  flex: none;
+  border-radius: var(--r-full);
+  background: #34d399;
+}
+.login-brand h1 {
+  margin: 0;
+  max-width: 32rem;
+  font-size: var(--text-headline-lg);
+  line-height: var(--lh-headline-lg);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: #fff;
+}
+.login-brand-lede {
+  margin: var(--space-base) 0 0;
+  max-width: 32rem;
+  font-size: var(--text-body-lg);
+  line-height: var(--lh-body-lg);
+  color: #cbd5e1;
+}
+.login-pillars {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-md);
+  margin-top: var(--space-xl);
+  padding-top: var(--space-xl);
+  border-top: 1px solid rgba(51, 65, 85, 0.8);
+  font-size: var(--text-label-md);
+  color: #cbd5e1;
+}
+.login-pillars .sep { color: var(--navy-700); }
+.login-pillar {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 500;
+}
+.login-pillar svg { width: 1rem; height: 1rem; }
+.login-pillar-assist { color: #60a5fa; }
+.login-pillar-human { color: #fbbf24; }
+.login-pillar-audit { color: #34d399; }
+.login-pipeline-card {
+  margin-top: var(--space-xl);
+  padding: var(--space-base);
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid var(--navy-800);
+  border-radius: var(--r-md);
+  font-size: var(--text-label-md);
+}
+.login-pipeline-head {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  font-family: var(--font-mono);
+  font-size: var(--text-label-sm);
+  letter-spacing: 0.04em;
+  color: #94a3b8;
+}
+.login-pipeline-head .active { color: #60a5fa; }
+.login-pipeline-card p {
+  margin: var(--space-sm) 0 0;
+  line-height: var(--lh-body-md);
+  color: #cbd5e1;
+}
+.login-brand-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-base);
+  padding-top: var(--space-lg);
+  border-top: 1px solid rgba(51, 65, 85, 0.8);
+  font-family: var(--font-mono);
+  font-size: var(--text-label-md);
+  color: #64748b;
+}
+.login-live {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-sm);
+  color: #94a3b8;
+}
+.login-live-dot {
+  width: 8px;
+  height: 8px;
+  flex: none;
+  border-radius: var(--r-full);
+  background: #10b981;
+}
+
+/* ---- Auth panel ---- */
+.login-panel {
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: var(--space-lg);
+}
+.login-context {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-xl);
+  font-size: var(--text-label-md);
+  color: var(--muted);
+}
+.login-context-crumb { display: inline-flex; align-items: center; gap: var(--space-sm); }
+.login-context-dot { width: 8px; height: 8px; border-radius: var(--r-full); background: var(--border-strong); }
+.login-context-crumb .sep { color: var(--border-strong); }
+.login-context-crumb strong { color: var(--ink-2); font-weight: 500; }
+.login-form-wrap {
+  width: 100%;
+  max-width: 420px;
+  margin: auto;
+  padding-block: var(--space-base);
+}
+.login-gateway {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-lg);
+  padding: 4px 10px;
+  font-size: var(--text-label-md);
+  font-weight: 500;
+  color: var(--ink-2);
+  background: var(--surface-muted);
+  border: 1px solid var(--border);
+  border-radius: var(--r-default);
+}
+.login-gateway svg { width: 0.875rem; height: 0.875rem; color: var(--navy-900); }
+.login-form-wrap h2 {
+  margin: 0;
+  font-size: 24px;
+  line-height: 32px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--navy-900);
+}
+.login-sub {
+  margin: 6px 0 0;
+  font-size: var(--text-body-md);
+  color: var(--muted);
+}
+.login-form { margin-top: var(--space-lg); }
+.login-form .field { margin: 0 0 var(--space-lg); }
+.login-submit {
+  height: 2.75rem;
+  font-size: var(--text-body-md);
+}
+.login-submit svg { width: 1rem; height: 1rem; }
+.login-submit-spin { animation: login-spin 0.9s linear infinite; }
+@keyframes login-spin { to { transform: rotate(360deg); } }
+.login-secure-note {
+  margin: var(--space-md) 0 0;
+  text-align: center;
+  font-size: var(--text-label-md);
+  color: var(--muted);
+}
+.login-foot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-md);
+  margin-top: var(--space-xl);
+  padding-top: var(--space-xl);
+  border-top: 1px solid var(--border);
+  font-size: var(--text-label-md);
+  color: var(--muted);
+  text-align: center;
+}.login-node-chip {
+  font-family: var(--font-mono);
+  font-size: var(--text-label-sm);
+  background: var(--surface-muted);
+  border: 1px solid var(--border);
+  border-radius: var(--r-default);
+  padding: 2px 8px;
+  color: var(--ink-2);
+}
+
+/* ---- Desktop split ---- */
+@media (min-width: 1024px) {
+  .login { flex-direction: row; }
+  .login-brand {
+    width: 47%;
+    flex: none;
+    min-height: 100dvh;
+    border-bottom: none;
+    border-right: 1px solid var(--navy-800);
+    padding: var(--space-2xl);
+  }
+  .login-panel {
+    flex: 1;
+    min-height: 100dvh;
+    overflow-y: auto;
+    padding: var(--space-2xl);
+  }
+  .login-foot { flex-direction: row; justify-content: space-between; text-align: left; }
+}
+
+/* ---- Auth landing option cards (same language as the login panel) ---- */
+.auth-option {
+  margin-top: var(--space-lg);
+  padding: var(--space-lg);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-1);
+}
+.auth-option h3 {
+  margin: 0;
+  font-size: var(--text-headline-sm);
+  line-height: var(--lh-headline-sm);
+}
+.auth-option p { margin: 2px 0 var(--space-base); color: var(--muted); font-size: var(--text-body-md); }
+.auth-option p:last-child { margin-bottom: 0; }
+
+/* ---- Entry screen: capability list + single primary path ----
+ * The brand column previously held a headline stranded in vertical emptiness.
+ * These three statements give it real content and set the vertical rhythm.
+ */
+.login-brand-body { display: flex; flex-direction: column; gap: var(--space-lg); }
+
+.login-caps {
+  list-style: none;
+  margin: var(--space-sm) 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  max-width: 30rem;
+}
+.login-caps li { display: flex; gap: var(--space-base); align-items: flex-start; }
+.login-caps-rule {
+  flex: none;
+  width: 2px;
+  align-self: stretch;
+  background: rgba(148, 163, 184, 0.35);
+  border-radius: var(--r-full);
+}
+.login-caps strong {
+  display: block;
+  font-size: var(--text-body-lg);
+  line-height: var(--lh-body-lg);
+  font-weight: var(--fw-semibold);
+  color: #fff;
+  letter-spacing: var(--tracking-heading);
+}
+.login-caps p {
+  margin: var(--space-2xs) 0 0;
+  font-size: var(--text-body-md);
+  line-height: var(--lh-body-md);
+  color: #94a3b8;
+}
+
+/* Secondary path: a text link, not a second competing card. */
+.login-alt {
+  margin: var(--space-lg) 0 0;
+  font-size: var(--text-body-md);
+  line-height: var(--lh-body-md);
+  color: var(--ink-2);
+}
+.login-alt a {
+  color: var(--accent-strong);
+  font-weight: var(--fw-medium);
+  text-underline-offset: 3px;
+}
+.login-alt a:hover { color: var(--navy-900); }
+.login-alt-note {
+  display: block;
+  margin-top: var(--space-2xs);
+  font-size: var(--text-body-sm);
+  line-height: var(--lh-body-sm);
+  color: var(--muted);
+}
+
+@media (min-width: 900px) {
+  /* Anchor the brand content toward the upper-middle rather than letting the
+   * flex distribution strand it in the centre of a tall column. */
+  .login-brand { justify-content: flex-start; gap: var(--space-2xl); }
+  .login-brand-body { margin-top: auto; }
+  .login-brand-foot { margin-top: auto; }
+}

@@ -1,0 +1,220 @@
+/* Design tokens — Government Intelligence Workspace (Stitch project
+ * 5026128240319690003, "Government Intelligence Workspace - Master Design
+ * System"). Values transcribed from the Stitch designMd + Login screen theme.
+ * Single source of truth for all frontend styling; views/components must use
+ * these variables, never hardcoded hex.
+ */
+:root {
+  /* Structural navy scale (Stitch tailwind config) */
+  --navy-950: #070c18;
+  --navy-900: #0f172a;
+  --navy-850: #15203b;
+  --navy-800: #1e293b;
+  --navy-700: #334155;
+
+  /* Canvas & surfaces */
+  --bg-canvas: #f8fafc;
+  --surface: #ffffff;
+  --surface-muted: #f1f5f9;
+  --border: #e2e8f0;
+  --border-strong: #cbd5e1;
+  --border-input: #cbd5e1;
+
+  /* Text */
+  --ink: #0f172a;
+  --ink-2: #475569;
+  --muted: #64748b;
+  --placeholder: #94a3b8;
+
+  /* Interactive accent (restrained steel blue, affordances only) */
+  --accent: #0284c7;
+  --accent-strong: #0369a1;
+
+  /* Semantic tiers: ink / fill / boundary (Stitch spec) */
+  --verified-ink: #059669;
+  --verified-fill: #ecfdf5;
+  --verified-border: #a7f3d0;
+  --review-ink: #d97706;
+  --review-fill: #fffbeb;
+  --review-border: #fde68a;
+  --failed-ink: #dc2626;
+  --failed-fill: #fef2f2;
+  --failed-border: #fecaca;
+  --processing-ink: #2563eb;
+  --processing-fill: #eff6ff;
+  --processing-border: #bfdbfe;
+  --error: #ba1a1a;
+  --error-container: #ffdad6;
+
+  /* Typography (Inter everywhere; JetBrains Mono for tabular/IDs) */
+  --font-sans: "Inter", -apple-system, "BlinkMacSystemFont", "Segoe UI", "Roboto", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --text-headline-lg: 30px;
+  --lh-headline-lg: 38px;
+  --text-headline-md: 20px;
+  --lh-headline-md: 28px;
+  --text-headline-sm: 16px;
+  --lh-headline-sm: 24px;
+  --text-body-lg: 15px;
+  --lh-body-lg: 24px;
+  --text-body-md: 14px;
+  --lh-body-md: 20px;
+  --text-body-sm: 13px;
+  --lh-body-sm: 18px;
+  --text-label-md: 12px;
+  --lh-label-md: 16px;
+  --text-label-sm: 11px;
+  --lh-label-sm: 14px;
+
+  /* Page-title tier: one step above headline-lg so a page title is never
+   * mistaken for a section heading. */
+  --text-title: 24px;
+  --lh-title: 32px;
+
+  /* Weights. Body copy stays regular; emphasis comes from scale and colour,
+   * not from bolding everything. */
+  --fw-regular: 400;
+  --fw-medium: 500;
+  --fw-semibold: 600;
+  --fw-bold: 700;
+
+  /* Tracking. Slightly negative on large text (optical correction), slightly
+   * positive only on small uppercase eyebrows — never on body copy. */
+  --tracking-title: -0.02em;
+  --tracking-heading: -0.01em;
+  --tracking-normal: 0;
+  --tracking-eyebrow: 0.06em;
+
+  /* Spacing (8px base) + shell dimensions */
+  --space-2xs: 0.125rem;
+  --space-xs: 0.25rem;
+  --space-sm: 0.5rem;
+  --space-md: 0.75rem;
+  --space-base: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2rem;
+  --space-2xl: 2.5rem;
+  --gutter-sidebar: 16rem;
+  --header-height: 3.5rem;
+
+  /* Radius: controls 4px, panels 6-8px, status chips 4px (pills only for chips) */
+  --r-sm: 0.125rem;
+  --r-default: 0.25rem;
+  --r-md: 0.375rem;
+  --r-lg: 0.5rem;
+  --r-xl: 0.75rem;
+  --r-full: 9999px;
+
+  /* Elevation: flat + 1px borders; shadows only separate planes */
+  --shadow-1: 0 1px 2px 0 rgba(15, 23, 42, 0.05);
+  --shadow-2: 0 4px 6px -1px rgba(15, 23, 42, 0.08), 0 2px 4px -2px rgba(15, 23, 42, 0.04);
+  --shadow-3: 0 10px 15px -3px rgba(15, 23, 42, 0.12), 0 4px 6px -4px rgba(15, 23, 42, 0.04);
+
+  /* Interaction states — defined once so every control focuses identically.
+   * A single visible focus ring is an accessibility requirement, not styling. */
+  --focus-ring: 0 0 0 2px var(--surface), 0 0 0 4px var(--accent);
+  --focus-ring-inset: inset 0 0 0 2px var(--accent);
+  --disabled-opacity: 0.55;
+
+  /* Row/section rhythm shared by tables and field grids. */
+  --row-height: 3rem;
+  --row-height-compact: 2.5rem;
+
+  /* Duration scale. Motion only ever confirms a state change. */
+  --motion-fast: 120ms;
+  --motion-base: 180ms;
+  --motion-ease: cubic-bezier(0.2, 0, 0.13, 1);
+}
+
+body {
+  font-family: var(--font-sans);
+  font-size: var(--text-body-md);
+  line-height: var(--lh-body-md);
+  background: var(--bg-canvas);
+  color: var(--ink);
+}
+
+/* ------------------------------------------------------------------
+ * Typographic roles. Every screen composes from these seven tiers so
+ * hierarchy is a system decision, not a per-page choice.
+ * ------------------------------------------------------------------ */
+
+.t-title {
+  font-size: var(--text-title);
+  line-height: var(--lh-title);
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--tracking-title);
+  color: var(--ink);
+  margin: 0;
+}
+
+.t-section {
+  font-size: var(--text-headline-sm);
+  line-height: var(--lh-headline-sm);
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--tracking-heading);
+  color: var(--ink);
+  margin: 0;
+}
+
+.t-eyebrow {
+  font-size: var(--text-label-sm);
+  line-height: var(--lh-label-sm);
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--tracking-eyebrow);
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.t-label {
+  font-size: var(--text-label-md);
+  line-height: var(--lh-label-md);
+  font-weight: var(--fw-medium);
+  color: var(--ink-2);
+}
+
+.t-value {
+  font-size: var(--text-body-lg);
+  line-height: var(--lh-body-lg);
+  font-weight: var(--fw-medium);
+  color: var(--ink);
+}
+
+.t-meta {
+  font-size: var(--text-body-sm);
+  line-height: var(--lh-body-sm);
+  color: var(--muted);
+}
+
+.t-help {
+  font-size: var(--text-body-sm);
+  line-height: var(--lh-body-sm);
+  color: var(--ink-2);
+}
+
+/* A value the backend did not supply. Never render "null" or "—" alone. */
+.t-absent {
+  color: var(--placeholder);
+  font-style: normal;
+}
+
+/* One focus treatment for the entire product. */
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+  border-radius: var(--r-default);
+}
+
+/* Tabular numerals are mandatory for data/confidence/IDs (Stitch spec). */
+.tnum {
+  font-variant-numeric: tabular-nums;
+  font-family: var(--font-mono);
+}
+
+/* Cadastral survey grid backdrop for dark institutional panels. */
+.bg-cadastral-grid {
+  background-size: 32px 32px;
+  background-image:
+    linear-gradient(to right, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+}

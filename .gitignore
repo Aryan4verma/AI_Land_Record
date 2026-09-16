@@ -1,0 +1,36 @@
+# Secrets — never commit real credentials
+.env
+*.env
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Node
+node_modules/
+dist/
+
+# Uploads / local data
+uploads/
+dataset/raw_documents/
+dataset/preprocessed/
+
+# OS / editors
+.DS_Store
+Thumbs.db
+.vscode/
+
+# Local tool configuration that carries a plaintext MCP credential.
+# opencode.json holds an X-Goog-Api-Key for the Stitch MCP server; it must
+# never reach a repository. Keep a placeholder copy as opencode.example.json.
+opencode.json
+opencode.jsonc
+tessdata/*.traineddata
+
+# Demo fixture document is tracked; regenerate the derived JSON with
+# scripts/build_demo_fixture.py if it is ever missing.
+
+# Local/unrelated files
+Videos/

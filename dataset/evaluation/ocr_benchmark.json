@@ -1,0 +1,111 @@
+{
+  "engine": "tesseract",
+  "engine_version": "5.4.0.20240606",
+  "dataset_version": "dataset_v1",
+  "date": "2026-09-07T13:58:21+00:00",
+  "results": [
+    {
+      "id": "doc01_clean",
+      "difficulty": "EASY",
+      "cer": 0.0,
+      "wer": 0.0,
+      "mean_confidence": 0.9495,
+      "lines_detected": 13,
+      "lines_expected": 13,
+      "seconds": 1.58,
+      "failed": false,
+      "error": ""
+    },
+    {
+      "id": "doc02_noisy",
+      "difficulty": "MEDIUM",
+      "cer": 0.0032,
+      "wer": 0.0222,
+      "mean_confidence": 0.9312,
+      "lines_detected": 13,
+      "lines_expected": 13,
+      "seconds": 1.9,
+      "failed": false,
+      "error": ""
+    },
+    {
+      "id": "doc03_faded",
+      "difficulty": "HARD",
+      "cer": 0.0,
+      "wer": 0.0,
+      "mean_confidence": 0.9497,
+      "lines_detected": 13,
+      "lines_expected": 13,
+      "seconds": 1.5,
+      "failed": false,
+      "error": ""
+    },
+    {
+      "id": "step08_bad",
+      "difficulty": "HARD",
+      "cer": 0.0016,
+      "wer": 0.0115,
+      "mean_confidence": 0.9482,
+      "lines_detected": 21,
+      "lines_expected": 21,
+      "seconds": 2.66,
+      "failed": false,
+      "error": ""
+    },
+    {
+      "id": "doc04_hindi",
+      "difficulty": "EASY",
+      "cer": 0.2143,
+      "wer": 0.4894,
+      "mean_confidence": 0.6488,
+      "lines_detected": 13,
+      "lines_expected": 13,
+      "seconds": 1.15,
+      "failed": false,
+      "error": ""
+    },
+    {
+      "id": "doc05_gujarati",
+      "difficulty": "EASY",
+      "cer": 0.0427,
+      "wer": 0.1333,
+      "mean_confidence": 0.8348,
+      "lines_detected": 13,
+      "lines_expected": 13,
+      "seconds": 1.68,
+      "failed": false,
+      "error": ""
+    },
+    {
+      "id": "doc06_mixed_en_hi",
+      "difficulty": "EASY",
+      "cer": 0.0368,
+      "wer": 0.1556,
+      "mean_confidence": 0.8239,
+      "lines_detected": 13,
+      "lines_expected": 13,
+      "seconds": 1.97,
+      "failed": false,
+      "error": ""
+    },
+    {
+      "id": "doc07_mixed_en_gu",
+      "difficulty": "EASY",
+      "cer": 0.0334,
+      "wer": 0.0444,
+      "mean_confidence": 0.9155,
+      "lines_detected": 13,
+      "lines_expected": 13,
+      "seconds": 1.83,
+      "failed": false,
+      "error": ""
+    }
+  ],
+  "summary": {
+    "documents": 8,
+    "failures": 0,
+    "mean_cer": 0.0415,
+    "mean_wer": 0.1071,
+    "total_seconds": 14.27
+  }
+}

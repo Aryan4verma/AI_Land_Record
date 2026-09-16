@@ -1,0 +1,740 @@
+{
+  "reports": [
+    {
+      "id": "doc01_clean",
+      "overall_score": 0.9529,
+      "overall_band": "HIGH",
+      "review_required": true,
+      "reasons": [],
+      "fields": {
+        "owner_name": {
+          "field": "owner_name",
+          "score": 0.98,
+          "band": "HIGH",
+          "review_required": false,
+          "ocr_confidence": 0.96,
+          "extraction_confidence": 1.0,
+          "reasons": [
+            "OCR line confidence 0.96",
+            "extraction confidence 1.00"
+          ]
+        },
+        "father_or_spouse_name": {
+          "field": "father_or_spouse_name",
+          "score": 0.9788,
+          "band": "HIGH",
+          "review_required": false,
+          "ocr_confidence": 0.9575,
+          "extraction_confidence": 1.0,
+          "reasons": [
+            "OCR line confidence 0.96",
+            "extraction confidence 1.00"
+          ]
+        },
+        "survey_number": {
+          "field": "survey_number",
+          "score": 0.69,
+          "band": "MEDIUM",
+          "review_required": true,
+          "ocr_confidence": 0.9366666666666666,
+          "extraction_confidence": 1.0,
+          "reasons": [
+            "OCR line confidence 0.94",
+            "extraction confidence 1.00",
+            "validation DUP_CANDIDATE_001 REVIEW_REQUIRED: Possible duplicate: survey number '145/2' in village 'Demo Village' matches 2 existing record(s). This is a review promp",
+            "review-level validation issue caps score at 0.69",
+            "flagged for human review by validation outcome"
+          ]
+        },
+        "khasra_number": {
+          "field": "khasra_number",
+          "score": 0.9733,
+          "band": "HIGH",
+          "review_required": false,
+          "ocr_confidence": 0.9466666666666667,
+          "extraction_confidence": 1.0,
+          "reasons": [
+            "OCR line confidence 0.95",
+            "extraction confidence 1.00"
+          ]
+        },
+        "khata_number": {
+          "field": "khata_number",
+          "score": 0.9717,
+          "band": "HIGH",
+          "review_required": false,
+          "ocr_confidence": 0.9433333333333334,
+          "extraction_confidence": 1.0,
+          "reasons": [
+            "OCR line confidence 0.94",
+            "extraction confidence 1.00"
+          ]
+        },
+        "area": {
+          "field": "area",
+          "score": 0.965,
+          "band": "HIGH",
+          "review_required": false,
+          "ocr_confidence": 0.93,
+          "extraction_confidence": 1.0,
+          "reasons": [
+            "OCR line confidence 0.93",
+            "extraction confidence 1.00"
+          ]
+        },
+        "area_unit": {
+          "field": "area_unit",
+          "score": 0.965,
+          "band": "HIGH",
+          "review_required": false,
+          "ocr_confidence": 0.93,
+          "extraction_confidence": 1.0,
+          "reasons": [
+            "OCR line confidence 0.93",
+            "extraction confidence 1.00"
+          ]
+        },
+        "village": {
+          "field": "village",
+          "score": 0.9783,
+          "band": "HIGH",
+          "review_required": false,
+          "ocr_confidence": 0.9566666666666667,
+          "extraction_confidence": 1.0,
+          "reasons": [
+            "OCR line confidence 0.96",
+            "extraction confidence 1.00"
+          ]
+        },
+        "tehsil": {
+          "field": "tehsil",
+          "score": 0.9783,
+          "band": "HIGH",
+          "review_required": false,
+          "ocr_confidence": 0.9566666666666667,
+          "extraction_confidence": 1.0,
+          "reasons": [
+            "OCR line confidence 0.96",
+            "extraction confidence 1.00"
+          ]
+        },
+        "district": {
+          "field": "district",
+          "score": 0.9783,
+          "band": "HIGH",
+          "review_required": false,
+          "ocr_confidence": 0.9566666666666667,
+          "extraction_confidence": 1.0,
+          "reasons": [
+            "OCR line confidence 0.96",
+            "extraction confidence 1.00"
+          ]
+        },
+        "land_classification": {
+          "field": "land_classification",
+          "score": 0.98,
+          "band": "HIGH",
+          "review_required": false,
+          "ocr_confidence": 0.96,
+          "extraction_confidence": 1.0,
+          "reasons": [
+            "OCR line confidence 0.96",
+            "extraction confidence 1.00"
+          ]
+        },
+        "mutation_number": {
+          "field": "mutation_number",
+          "score": 0.9683,
+          "band": "HIGH",
+          "review_required": false,
+          "ocr_confidence": 0.9366666666666666,
+          "extraction_confidence": 1.0,
+          "reasons": [
+            "OCR line confidence 0.94",
+            "extraction confidence 1.00"
+          ]
+        },
+        "registration_number": {
+          "field": "registration_number",
+          "score": null,
+          "band": "REVIEW_REQUIRED",
+          "review_required": true,
+          "ocr_confidence": null,
+          "extraction_confidence": null,
+          "reasons": [
+            "no value to locate in OCR text",
+            "extraction confidence not reported",
+            "value is missing; nothing to score"
+          ]
+        },
+        "record_date": {
+          "field": "record_date",
+          "score": 0.98,
+          "band": "HIGH",
+          "review_required": false,
+          "ocr_confidence": 0.96,
+          "extraction_confidence": 1.0,
+          "reasons": [
+            "OCR line confidence 0.96",
+            "extraction confidence 1.00"
+          ]
+        }
+      }
+    },
+    {
+      "id": "doc02_noisy",
+      "overall_score": 0.9601,
+      "overall_band": "HIGH",
+      "review_required": true,
+      "reasons": [],
+      "fields": {
+        "owner_name": {
+          "field": "owner_name",
+          "score": 0.9738,
+          "band": "HIGH",
+          "review_required": false,
+          "ocr_confidence": 0.9575,
+          "extraction_confidence": 0.99,
+          "reasons": [
+            "OCR line confidence 0.96",
+            "extraction confidence 0.99"
+          ]
+        },
+        "father_or_spouse_name": {
+          "field": "father_or_spouse_name",
+          "score": 0.9738,
+          "band": "HIGH",
+          "review_required": false,
+          "ocr_confidence": 0.9575,
+          "extraction_confidence": 0.99,
+          "reasons": [
+            "OCR line confidence 0.96",
+            "extraction confidence 0.99"
+          ]
+        },
+        "survey_number": {
+          "field": "survey_number",
+          "score": 0.8367,
+          "band": "HIGH",
+          "review_required": false,
+          "ocr_confidence": 0.6833333333333332,
+          "extraction_confidence": 0.99,
+          "reasons": [
+            "OCR line confidence 0.68",
+            "extraction confidence 0.99"
+          ]
+        },
+        "khasra_number": {
+          "field": "khasra_number",
+          "score": 0.9683,
+          "band": "HIGH",
+          "review_required": false,
+          "ocr_confidence": 0.9466666666666667,
+          "extraction_confidence": 0.99,
+          "reasons": [
+            "OCR line confidence 0.95",
+            "extraction confidence 0.99"
+          ]
+        },
+        "khata_number": {
+          "field": "khata_number",
+          "score": 0.97,
+          "band": "HIGH",
+          "review_required": false,
+          "ocr_confidence": 0.9500000000000001,
+          "extraction_confidence": 0.99,
+          "reasons": [
+            "OCR line confidence 0.95",
+            "extraction confidence 0.99"
+          ]
+        },
+        "area": {
+          "field": "area",
+          "score": 0.9633,
+          "band": "HIGH",
+          "review_required": false,
+          "ocr_confidence": 0.9366666666666666,
+          "extraction_confidence": 0.99,
+          "reasons": [
+            "OCR line confidence 0.94",
+            "extraction confidence 0.99"
+          ]
+        },
+        "area_unit": {
+          "field": "area_unit",
+          "score": 0.9633,
+          "band": "HIGH",
+          "review_required": false,
+          "ocr_confidence": 0.9366666666666666,
+          "extraction_confidence": 0.99,
+          "reasons": [
+            "OCR line confidence 0.94",
+            "extraction confidence 0.99"
+          ]
+        },
+        "village": {
+          "field": "village",
+          "score": 0.975,
+          "band": "HIGH",
+          "review_required": false,
+          "ocr_confidence": 0.96,
+          "extraction_confidence": 0.99,
+          "reasons": [
+            "OCR line confidence 0.96",
+            "extraction confidence 0.99"
+          ]
+        },
+        "tehsil": {
+          "field": "tehsil",
+          "score": 0.9717,
+          "band": "HIGH",
+          "review_required": false,
+          "ocr_confidence": 0.9533333333333333,
+          "extraction_confidence": 0.99,
+          "reasons": [
+            "OCR line confidence 0.95",
+            "extraction confidence 0.99"
+          ]
+        },
+        "district": {
+          "field": "district",
+          "score": 0.9683,
+          "band": "HIGH",
+          "review_required": false,
+          "ocr_confidence": 0.9466666666666667,
+          "extraction_confidence": 0.99,
+          "reasons": [
+            "OCR line confidence 0.95",
+            "extraction confidence 0.99"
+          ]
+        },
+        "land_classification": {
+          "field": "land_classification",
+          "score": 0.975,
+          "band": "HIGH",
+          "review_required": false,
+          "ocr_confidence": 0.96,
+          "extraction_confidence": 0.99,
+          "reasons": [
+            "OCR line confidence 0.96",
+            "extraction confidence 0.99"
+          ]
+        },
+        "mutation_number": {
+          "field": "mutation_number",
+          "score": 0.9667,
+          "band": "HIGH",
+          "review_required": false,
+          "ocr_confidence": 0.9433333333333334,
+          "extraction_confidence": 0.99,
+          "reasons": [
+            "OCR line confidence 0.94",
+            "extraction confidence 0.99"
+          ]
+        },
+        "registration_number": {
+          "field": "registration_number",
+          "score": null,
+          "band": "REVIEW_REQUIRED",
+          "review_required": true,
+          "ocr_confidence": null,
+          "extraction_confidence": null,
+          "reasons": [
+            "no value to locate in OCR text",
+            "extraction confidence not reported",
+            "value is missing; nothing to score"
+          ]
+        },
+        "record_date": {
+          "field": "record_date",
+          "score": 0.975,
+          "band": "HIGH",
+          "review_required": false,
+          "ocr_confidence": 0.96,
+          "extraction_confidence": 0.99,
+          "reasons": [
+            "OCR line confidence 0.96",
+            "extraction confidence 0.99"
+          ]
+        }
+      }
+    },
+    {
+      "id": "doc03_faded",
+      "overall_score": 0.9484,
+      "overall_band": "HIGH",
+      "review_required": true,
+      "reasons": [],
+      "fields": {
+        "owner_name": {
+          "field": "owner_name",
+          "score": 0.975,
+          "band": "HIGH",
+          "review_required": false,
+          "ocr_confidence": 0.96,
+          "extraction_confidence": 0.99,
+          "reasons": [
+            "OCR line confidence 0.96",
+            "extraction confidence 0.99"
+          ]
+        },
+        "father_or_spouse_name": {
+          "field": "father_or_spouse_name",
+          "score": 0.9725,
+          "band": "HIGH",
+          "review_required": false,
+          "ocr_confidence": 0.955,
+          "extraction_confidence": 0.99,
+          "reasons": [
+            "OCR line confidence 0.95",
+            "extraction confidence 0.99"
+          ]
+        },
+        "survey_number": {
+          "field": "survey_number",
+          "score": 0.69,
+          "band": "MEDIUM",
+          "review_required": true,
+          "ocr_confidence": 0.9366666666666666,
+          "extraction_confidence": 0.99,
+          "reasons": [
+            "OCR line confidence 0.94",
+            "extraction confidence 0.99",
+            "validation DUP_CANDIDATE_001 REVIEW_REQUIRED: Possible duplicate: survey number '145/2' in village 'Demo Village' matches 2 existing record(s). This is a review promp",
+            "review-level validation issue caps score at 0.69",
+            "flagged for human review by validation outcome"
+          ]
+        },
+        "khasra_number": {
+          "field": "khasra_number",
+          "score": 0.9683,
+          "band": "HIGH",
+          "review_required": false,
+          "ocr_confidence": 0.9466666666666667,
+          "extraction_confidence": 0.99,
+          "reasons": [
+            "OCR line confidence 0.95",
+            "extraction confidence 0.99"
+          ]
+        },
+        "khata_number": {
+          "field": "khata_number",
+          "score": 0.9683,
+          "band": "HIGH",
+          "review_required": false,
+          "ocr_confidence": 0.9466666666666667,
+          "extraction_confidence": 0.99,
+          "reasons": [
+            "OCR line confidence 0.95",
+            "extraction confidence 0.99"
+          ]
+        },
+        "area": {
+          "field": "area",
+          "score": 0.96,
+          "band": "HIGH",
+          "review_required": false,
+          "ocr_confidence": 0.93,
+          "extraction_confidence": 0.99,
+          "reasons": [
+            "OCR line confidence 0.93",
+            "extraction confidence 0.99"
+          ]
+        },
+        "area_unit": {
+          "field": "area_unit",
+          "score": 0.96,
+          "band": "HIGH",
+          "review_required": false,
+          "ocr_confidence": 0.93,
+          "extraction_confidence": 0.99,
+          "reasons": [
+            "OCR line confidence 0.93",
+            "extraction confidence 0.99"
+          ]
+        },
+        "village": {
+          "field": "village",
+          "score": 0.975,
+          "band": "HIGH",
+          "review_required": false,
+          "ocr_confidence": 0.96,
+          "extraction_confidence": 0.99,
+          "reasons": [
+            "OCR line confidence 0.96",
+            "extraction confidence 0.99"
+          ]
+        },
+        "tehsil": {
+          "field": "tehsil",
+          "score": 0.9733,
+          "band": "HIGH",
+          "review_required": false,
+          "ocr_confidence": 0.9566666666666667,
+          "extraction_confidence": 0.99,
+          "reasons": [
+            "OCR line confidence 0.96",
+            "extraction confidence 0.99"
+          ]
+        },
+        "district": {
+          "field": "district",
+          "score": 0.9733,
+          "band": "HIGH",
+          "review_required": false,
+          "ocr_confidence": 0.9566666666666667,
+          "extraction_confidence": 0.99,
+          "reasons": [
+            "OCR line confidence 0.96",
+            "extraction confidence 0.99"
+          ]
+        },
+        "land_classification": {
+          "field": "land_classification",
+          "score": 0.975,
+          "band": "HIGH",
+          "review_required": false,
+          "ocr_confidence": 0.96,
+          "extraction_confidence": 0.99,
+          "reasons": [
+            "OCR line confidence 0.96",
+            "extraction confidence 0.99"
+          ]
+        },
+        "mutation_number": {
+          "field": "mutation_number",
+          "score": 0.9633,
+          "band": "HIGH",
+          "review_required": false,
+          "ocr_confidence": 0.9366666666666666,
+          "extraction_confidence": 0.99,
+          "reasons": [
+            "OCR line confidence 0.94",
+            "extraction confidence 0.99"
+          ]
+        },
+        "registration_number": {
+          "field": "registration_number",
+          "score": null,
+          "band": "REVIEW_REQUIRED",
+          "review_required": true,
+          "ocr_confidence": null,
+          "extraction_confidence": null,
+          "reasons": [
+            "no value to locate in OCR text",
+            "extraction confidence not reported",
+            "value is missing; nothing to score"
+          ]
+        },
+        "record_date": {
+          "field": "record_date",
+          "score": 0.975,
+          "band": "HIGH",
+          "review_required": false,
+          "ocr_confidence": 0.96,
+          "extraction_confidence": 0.99,
+          "reasons": [
+            "OCR line confidence 0.96",
+            "extraction confidence 0.99"
+          ]
+        }
+      }
+    },
+    {
+      "id": "step08_bad",
+      "overall_score": 0.8156,
+      "overall_band": "HIGH",
+      "review_required": true,
+      "reasons": [],
+      "fields": {
+        "owner_name": {
+          "field": "owner_name",
+          "score": null,
+          "band": "REVIEW_REQUIRED",
+          "review_required": true,
+          "ocr_confidence": null,
+          "extraction_confidence": null,
+          "reasons": [
+            "no value to locate in OCR text",
+            "extraction confidence not reported",
+            "value is missing; nothing to score",
+            "validation REQ_OWNER_NAME_001 REVIEW_REQUIRED: Owner name is required but missing. Field: owner_name. The document is expected to contain it. Reviewer: check the sourc",
+            "review-level validation issue caps score at 0.69"
+          ]
+        },
+        "father_or_spouse_name": {
+          "field": "father_or_spouse_name",
+          "score": 0.9425,
+          "band": "HIGH",
+          "review_required": false,
+          "ocr_confidence": 0.935,
+          "extraction_confidence": 0.95,
+          "reasons": [
+            "OCR line confidence 0.94",
+            "extraction confidence 0.95"
+          ]
+        },
+        "survey_number": {
+          "field": "survey_number",
+          "score": 0.69,
+          "band": "MEDIUM",
+          "review_required": true,
+          "ocr_confidence": 0.9366666666666666,
+          "extraction_confidence": 0.95,
+          "reasons": [
+            "OCR line confidence 0.94",
+            "extraction confidence 0.95",
+            "validation DUP_CANDIDATE_001 REVIEW_REQUIRED: Possible duplicate: survey number '145/2' in village 'Demo Village' matches 2 existing record(s). This is a review promp",
+            "review-level validation issue caps score at 0.69",
+            "flagged for human review by validation outcome"
+          ]
+        },
+        "khasra_number": {
+          "field": "khasra_number",
+          "score": 0.9483,
+          "band": "HIGH",
+          "review_required": false,
+          "ocr_confidence": 0.9466666666666667,
+          "extraction_confidence": 0.95,
+          "reasons": [
+            "OCR line confidence 0.95",
+            "extraction confidence 0.95"
+          ]
+        },
+        "khata_number": {
+          "field": "khata_number",
+          "score": 0.95,
+          "band": "HIGH",
+          "review_required": false,
+          "ocr_confidence": 0.9500000000000001,
+          "extraction_confidence": 0.95,
+          "reasons": [
+            "OCR line confidence 0.95",
+            "extraction confidence 0.95"
+          ]
+        },
+        "area": {
+          "field": "area",
+          "score": 0.39,
+          "band": "LOW",
+          "review_required": true,
+          "ocr_confidence": 0.96,
+          "extraction_confidence": 0.95,
+          "reasons": [
+            "OCR line confidence 0.96",
+            "extraction confidence 0.95",
+            "validation FMT_AREA_002 FAIL: Area must be positive (got 0). Field: area. Zero or negative areas are never valid land areas. Reviewer: verify the area",
+            "blocking validation issue caps score at 0.39"
+          ]
+        },
+        "area_unit": {
+          "field": "area_unit",
+          "score": 0.69,
+          "band": "MEDIUM",
+          "review_required": true,
+          "ocr_confidence": 0.9366666666666666,
+          "extraction_confidence": 0.95,
+          "reasons": [
+            "OCR line confidence 0.94",
+            "extraction confidence 0.95",
+            "validation FMT_UNIT_001 WARNING: Area unit 'bigha' is not in the known list (hectare, acre, sqm). Field: area_unit. Regional units vary, so this is a rev",
+            "review-level validation issue caps score at 0.69",
+            "flagged for human review by validation outcome"
+          ]
+        },
+        "village": {
+          "field": "village",
+          "score": 0.955,
+          "band": "HIGH",
+          "review_required": false,
+          "ocr_confidence": 0.96,
+          "extraction_confidence": 0.95,
+          "reasons": [
+            "OCR line confidence 0.96",
+            "extraction confidence 0.95"
+          ]
+        },
+        "tehsil": {
+          "field": "tehsil",
+          "score": 0.69,
+          "band": "MEDIUM",
+          "review_required": true,
+          "ocr_confidence": 0.9566666666666667,
+          "extraction_confidence": 0.95,
+          "reasons": [
+            "OCR line confidence 0.96",
+            "extraction confidence 0.95",
+            "validation REF_TEHSIL_001 REVIEW_REQUIRED: Tehsil 'Wrong Tehsil' is not in reference demo-seed version v1. Field: tehsil. Reviewer: check the spelling against the ",
+            "validation REF_GEO_CHAIN_001 REVIEW_REQUIRED: Village 'Demo Village' belongs to tehsil 'demo tehsil' per reference data, but the record says 'Wrong Tehsil'. Field: te",
+            "review-level validation issue caps score at 0.69",
+            "flagged for human review by validation outcome"
+          ]
+        },
+        "district": {
+          "field": "district",
+          "score": 0.955,
+          "band": "HIGH",
+          "review_required": false,
+          "ocr_confidence": 0.96,
+          "extraction_confidence": 0.95,
+          "reasons": [
+            "OCR line confidence 0.96",
+            "extraction confidence 0.95"
+          ]
+        },
+        "land_classification": {
+          "field": "land_classification",
+          "score": 0.955,
+          "band": "HIGH",
+          "review_required": false,
+          "ocr_confidence": 0.96,
+          "extraction_confidence": 0.95,
+          "reasons": [
+            "OCR line confidence 0.96",
+            "extraction confidence 0.95"
+          ]
+        },
+        "mutation_number": {
+          "field": "mutation_number",
+          "score": 0.9317,
+          "band": "HIGH",
+          "review_required": false,
+          "ocr_confidence": 0.9133333333333334,
+          "extraction_confidence": 0.95,
+          "reasons": [
+            "OCR line confidence 0.91",
+            "extraction confidence 0.95"
+          ]
+        },
+        "registration_number": {
+          "field": "registration_number",
+          "score": null,
+          "band": "REVIEW_REQUIRED",
+          "review_required": true,
+          "ocr_confidence": null,
+          "extraction_confidence": null,
+          "reasons": [
+            "no value to locate in OCR text",
+            "extraction confidence not reported",
+            "value is missing; nothing to score"
+          ]
+        },
+        "record_date": {
+          "field": "record_date",
+          "score": 0.69,
+          "band": "MEDIUM",
+          "review_required": true,
+          "ocr_confidence": 0.96,
+          "extraction_confidence": 0.9,
+          "reasons": [
+            "OCR line confidence 0.96",
+            "extraction confidence 0.90",
+            "validation FMT_DATE_001 WARNING: Record date '99/99/2024' is not in a recognized format. Field: record_date. The raw value was preserved unchanged. Revie",
+            "review-level validation issue caps score at 0.69",
+            "flagged for human review by validation outcome"
+          ]
+        }
+      }
+    }
+  ]
+}

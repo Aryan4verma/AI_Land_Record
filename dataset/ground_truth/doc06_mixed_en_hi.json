@@ -1,0 +1,22 @@
+{
+  "id": "doc06_mixed_en_hi",
+  "language": "eng+hin",
+  "lines": [
+    "SAMPLE LAND RECORD - FOR TESTING ONLY",
+    "Khata Number: 123",
+    "Khasra Number: 78",
+    "Survey Number: 145/2",
+    "Owner Name: रमेश कुमार",
+    "Father Name: सुरेश कुमार",
+    "Area: 2.45 हेक्टेयर",
+    "Village: डेमो गाँव",
+    "Tehsil: डेमो तहसील",
+    "District: डेमो जिला",
+    "Land Classification: कृषि",
+    "Mutation Number: M-2024-0091",
+    "Record Date: 15-03-2024"
+  ],
+  "text": "SAMPLE LAND RECORD - FOR TESTING ONLY\nKhata Number: 123\nKhasra Number: 78\nSurvey Number: 145/2\nOwner Name: रमेश कुमार\nFather Name: सुरेश कुमार\nArea: 2.45 हेक्टेयर\nVillage: डेमो गाँव\nTehsil: डेमो तहसील\nDistrict: डेमो जिला\nLand Classification: कृषि\nMutation Number: M-2024-0091\nRecord Date: 15-03-2024",
+  "source": "synthetic-render",
+  "note": "Ground truth is exact by construction (rendered from these exact strings). Development fixture only — does NOT measure real-world scanned-document accuracy."
+}
