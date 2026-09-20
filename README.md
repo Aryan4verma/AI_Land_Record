@@ -1,599 +1,371 @@
 # Intelligent Land Record Digitization and Validation System
 
-### Smart India Hackathon 2026 — Problem Statement 26018
+### Smart India Hackathon 2026 · Problem Statement 26018 · Team VisionTech
 
-**Team:** VisionTech  
-**Category:** Software  
-**Theme:** Smart Automation
+> **From scanned land records to structured, validated, and reviewable digital records.**
 
-> Scanned land records → checked, structured data, with a human signature on every record.
+<p align="center">
+  <img src="./login_page.png" alt="Login Page" width="41%">
+  <img src="./home_page.png" alt="Home Page" width="41%">
+  <img src="./data_processing.png" alt="Data Processing" width="41%">
+  <img src="https://github.com/user-attachments/assets/21c93569-a5c6-4f99-b863-b1a06091d6d3" alt="Intelligent Land Record Digitization and Validation System" width="41%">
+</p>
 
----
-
-## Overview
-
-Land-record departments often work with scanned, handwritten, multilingual, and legacy documents that are difficult to search, validate, and convert into structured digital records.
-
-Our solution is an **AI-assisted land record digitization and validation platform** that transforms difficult document files into structured, searchable, and reviewable records.
-
-The system combines:
-
-**OCR + AI-based field extraction + deterministic validation + confidence scoring + human verification + audit trails**
-
-The goal is not to replace the responsible officer. Instead, the system helps the officer process records faster while keeping human review and approval in the workflow.
+An AI-assisted platform for digitizing difficult land-record documents using **OCR, structured field extraction, deterministic validation, confidence assessment, human review, and audit trails**.
 
 ---
 
-## Problem Statement
+## The Problem
 
-Legacy land records may contain:
+Land records can exist as scanned, handwritten, multilingual, low-quality, and inconsistently formatted documents. OCR alone can extract text, but it does not guarantee that the extracted land data is **correct, complete, consistent, or ready for official review**.
 
-- Scanned documents
-- Poor-quality document images
-- Multiple languages
-- Inconsistent formats
-- Difficult-to-read text
-- Important land and ownership fields spread across the document
-- Data that requires manual verification
+The system therefore goes beyond OCR:
 
-Manually entering and checking these records can be time-consuming and makes traceability difficult.
-
-A reliable digitization system therefore needs to do more than OCR. It should also identify important fields, validate them, highlight uncertainty, and maintain a record of human decisions.
+**Document → OCR → AI extraction → Validation → Confidence → Human Review → Approval → Audit**
 
 ---
 
-## Proposed Solution
+## Our Solution
 
-Our platform provides an end-to-end workflow:
+The platform converts an uploaded land-record document into a **structured and reviewable digital record** while keeping the responsible human operator in control.
 
-```text
-Land Record Document
-        ↓
-Upload
-        ↓
-Document Validation
-        ↓
-Page Rendering / Preprocessing
-        ↓
-OCR
-        ↓
-Structured Field Extraction
-        ↓
-Validation Rules
-        ↓
-Confidence / Risk Assessment
-        ↓
-Human Review
-        ↓
-Correction / Approval / Rejection
-        ↓
-Structured Record
-        ↓
-Audit Trail
-        ↓
-Search / Dashboard / API
-```
+### Core Idea
 
-The system is designed around a human-in-the-loop workflow, so uncertain or invalid information can be reviewed before final approval.
+> **AI proposes. Rules validate. Humans decide.**
 
-### Key Features
-
-### Document Ingestion
-
-- Upload land-record documents through the web application
-- Validate uploaded files before processing
-- Support PDF-based document workflows
-- Maintain document metadata and processing status
-
-### OCR and Document Processing
-
-- PDF page rendering using PyMuPDF
-- OCR using Tesseract
-- English, Hindi, and Gujarati OCR configuration
-- OCR output retained as part of the processing pipeline
-
-### AI-Assisted Extraction
-
-The system converts OCR output into structured land-record fields.
-
-The current prototype extracts **14 fields**, including examples such as:
-
-- Survey Number
-- Hissa
-- Khata
-- Khasra
-- Owner
-- Father / Guardian
-- Area / Extent
-- Land Classification
-- Mutation Reference
-- Record Date
-- Related cultivation information
-
-### Validation
-
-The extracted information is checked using deterministic validation rules.
-
-The current prototype contains **13 coded validation rules** covering checks such as:
-
-- Required-field validation
-- Format validation
-- Reference-data validation
-- Consistency checks
-- Review-required conditions
-
-### Confidence and Human Review
-
-AI confidence is treated as an uncertainty signal, not as proof of correctness.
-
-Records can be reviewed and corrected by an authorized operator before approval.
-
-### Audit Trail
-
-Important workflow actions are recorded so that the lifecycle of a record can be traced.
-
-The workflow can therefore move from:
-
-```text
-Upload → Process → Extract → Validate → Review → Correct → Approve
-```
-
-while retaining the associated audit information.
-
-### Role-Based Access
-
-The application supports role-aware access so users only receive the actions appropriate to their role.
-
----
-
-## Technology Stack
-
-| Layer | Technology |
-|---|---|
-| Frontend | React 19 + Vite 8 |
-| Backend | FastAPI + Uvicorn |
-| Database | PostgreSQL 17.6 |
-| Authentication | JWT (HS256) + bcrypt |
-| OCR | Tesseract 5.4 |
-| PDF Processing | PyMuPDF |
-| AI Extraction | Gemini with OpenRouter fallback |
-| Storage | Private object storage |
-| API | REST |
-| Testing | Vitest + Python backend tests |
-
----
-
-## Architecture
-
-```text
-┌─────────────────────────────┐
-│        React Frontend       │
-│  Login / Upload / Review /  │
-│  Records / Dashboard / UI   │
-└──────────────┬──────────────┘
-               │
-               │ REST API
-               ▼
-┌─────────────────────────────┐
-│       FastAPI Backend       │
-│                             │
-│ Auth & RBAC                 │
-│ Document Processing         │
-│ OCR                         │
-│ AI Extraction               │
-│ Validation                  │
-│ Review Workflow             │
-│ Audit Logging               │
-└──────────────┬──────────────┘
-               │
-       ┌───────┴────────┐
-       ▼                ▼
-┌─────────────┐   ┌──────────────┐
-│ PostgreSQL  │   │Private Storage│
-│ Structured  │   │   Documents   │
-│ Records     │   │               │
-│ Validation  │   └──────────────┘
-│ Audit Data  │
-└─────────────┘
-```
+The current prototype supports structured extraction across **14 land-record fields**, including owner, survey number, khasra, khata, area, village, tehsil, district, classification, mutation, registration and record-date information.
 
 ---
 
 ## End-to-End Workflow
 
-### 1. Sign In
+```mermaid
+flowchart LR
+    A["Land Record Document"] --> B["Upload & File Validation"]
+    B --> C["PDF Rendering / Preprocessing"]
+    C --> D["OCR"]
+    D --> E["AI Field Extraction"]
+    E --> F["Normalization"]
+    F --> G["Deterministic Validation"]
+    G --> H["Confidence / Risk Assessment"]
+    H --> I{"Review Required?"}
 
-An authorized user signs into the application.
+    I -->|Yes| J["Human Review & Correction"]
+    J --> K["Approve / Reject"]
 
-### 2. Upload Document
+    I -->|No| K
 
-The land-record document is uploaded through the web interface.
-
-### 3. Process Document
-
-The backend validates and processes the document.
-
-### 4. OCR
-
-The document pages are rendered and passed through the OCR pipeline.
-
-### 5. AI Extraction
-
-OCR output is converted into the required structured fields.
-
-### 6. Validation
-
-Extracted values are checked using coded validation rules and reference checks.
-
-### 7. Confidence Assessment
-
-The system identifies information that may require additional human attention.
-
-### 8. Human Review
-
-An authorized operator can inspect the extracted information and correct fields when required.
-
-### 9. Approval or Rejection
-
-The record can be approved or rejected according to the review workflow.
-
-### 10. Storage and Audit
-
-The resulting structured record and relevant workflow information are persisted in the database with audit information.
-
----
-
-## Demo Mode
-
-The project includes a controlled **Demo Mode** for reliable hackathon demonstrations.
-
-Demo Mode uses prepared document fixtures and predefined processing results rather than external AI calls for those known demo documents.
-
-This provides:
-
-- Predictable demonstrations
-- No dependency on external AI quota for demo fixtures
-- Repeatable results
-- The same validation and review workflow used by the application
-
-The important distinction is:
-
-### Demo Mode
-
-```text
-Controlled fixture
-       ↓
-Normal backend workflow
+    K --> L["Structured Land Record"]
+    L --> M["Audit Trail"]
+    M --> N["Search / Dashboard / API"]
 ```
 
-### Live Mode
+The important design principle is that **AI confidence is treated as an uncertainty signal, not as proof of correctness**.
 
-```text
-Real document
-       ↓
-OCR
-       ↓
-AI extraction
-       ↓
-Normal backend workflow
+---
+
+## What Makes the Approach Different
+
+| Traditional OCR                    | This System                                   |
+| ---------------------------------- | --------------------------------------------- |
+| Extracts text                      | Extracts structured land-record fields        |
+| Stops after OCR                    | Continues through validation                  |
+| AI output may be accepted directly | Deterministic rules check extracted data      |
+| Errors can remain hidden           | Confidence and validation issues are surfaced |
+| Manual work is disconnected        | Human review is part of the workflow          |
+| Limited traceability               | Corrections and decisions are auditable       |
+
+The novelty is therefore **the combination of the stages into one operational workflow**, rather than OCR alone.
+
+---
+
+## Architecture
+
+```mermaid
+flowchart TB
+    subgraph UI["User Layer"]
+        A["React Frontend"]
+        A1["Login"]
+        A2["Upload"]
+        A3["Review"]
+        A4["Records / Dashboard"]
+
+        A --> A1
+        A --> A2
+        A --> A3
+        A --> A4
+    end
+
+    subgraph API["Application Layer"]
+        B["FastAPI REST API"]
+        B1["Authentication & RBAC"]
+        B2["Document Processing"]
+        B3["OCR"]
+        B4["AI Extraction"]
+        B5["Validation"]
+        B6["Review / Approval"]
+        B7["Audit Logging"]
+
+        B --> B1
+        B --> B2
+        B --> B3
+        B --> B4
+        B --> B5
+        B --> B6
+        B --> B7
+    end
+
+    subgraph DATA["Data Layer"]
+        C["PostgreSQL / Supabase"]
+        D["Private Document Storage"]
+    end
+
+    A -->|"REST API"| B
+    B --> C
+    B --> D
 ```
 
-Demo Mode is intended for demonstration and testing. It is not presented as a replacement for live document processing.
+---
+
+## Core Features
+
+### Document Processing
+
+* PDF/document upload and validation
+* Page rendering and preprocessing
+* OCR pipeline with multilingual configuration
+* Processing status tracking
+
+### AI-Assisted Extraction
+
+* Converts OCR output into structured land-record data
+* Field-level confidence and extraction metadata
+* Provider-independent AI service design
+* Gemini with OpenRouter fallback support
+
+### Deterministic Validation
+
+Validation is performed independently from the AI model using rules such as:
+
+* Required-field checks
+* Format checks
+* Cross-field consistency
+* Reference-data checks
+* Duplicate detection
+* Review-required conditions
+
+### Human-in-the-Loop Review
+
+Authorized operators can:
+
+**Review → Correct → Complete → Approve / Reject**
+
+This prevents extracted information from being treated as final merely because an AI model produced it.
+
+### Auditability
+
+Important workflow actions, corrections, review decisions, and record changes can be traced through audit information.
+
+### Role-Based Access
+
+The application separates permissions for read-only users and operators, with review and approval actions protected by backend authorization.
 
 ---
 
-## Security
+## Prototype Evidence
 
-Security is considered throughout the application workflow.
+The current evaluation uses **`dataset_v1` with 4 specimen documents** and is explicitly not presented as a government archival benchmark.
 
-Current controls include:
+| Measurement                 |                     Current Result |
+| --------------------------- | ---------------------------------: |
+| Field extraction accuracy   |                         **98.21%** |
+| Correct field decisions     |                        **55 / 56** |
+| Structured fields           |                             **14** |
+| Documents in evaluation set |                              **4** |
+| Validation outcomes         | **1 Ready · 2 Review · 1 Blocked** |
 
-- Password hashing with bcrypt
-- JWT-based authentication
-- Role-aware authorization
-- Private document storage
-- File validation using file signatures / magic bytes
-- Failed-login protection
-- Server-side authorization checks
-- Audit logging
-- Environment-based secret configuration
-- Database access controls
+The 98.21% result is a prototype measurement from the current evaluation fixtures. `survey_number` was 75%, while the other 13 evaluated fields were 100%.
 
-Sensitive credentials and API keys are not intended to be stored in the source repository.
+> **Note:** These numbers are prototype measurements from the current evaluation fixtures, not production accuracy across real government land-record archives.
 
 ---
 
-## Validation Philosophy
+## Controlled Execution
 
-A core design principle of this project is:
+The backend supports a controlled execution path for known fixtures while keeping the downstream processing workflow consistent.
 
-> **AI confidence is not the same as correctness.**
-
-An AI model can produce a highly confident result that is still incorrect.
-
-Therefore, the system separates:
-
-```text
-AI Extraction
-      ↓
-Confidence
-      ↓
-Deterministic Validation
-      ↓
-Human Review
-      ↓
-Final Decision
+```mermaid
+flowchart LR
+    A["Known Demo Fixture"] --> B["Same Processing Pipeline"]
+    C["Live Document"] --> D["OCR + AI Extraction"]
+    D --> B
+    B --> E["Validation"]
+    E --> F["Review / Approval"]
+    F --> G["Persisted Record + Audit"]
 ```
 
-This approach is intended to make the system more transparent and safer for workflows where record accuracy matters.
+The key point is that the downstream **validation, confidence, persistence, review, approval, and audit workflow remains part of the same application flow**.
 
 ---
 
-## Evaluation Results
+## Technology Stack
 
-The current prototype has been evaluated using synthetic/specimen documents and repository test fixtures.
-
-The reported evaluation figures are therefore **prototype measurements**, not public benchmark results or measurements from a government land-record archive.
-
-### Current Measurements
-
-| Metric | Prototype Result |
-|---|---:|
-| Field extraction accuracy | 98.2% |
-| Correct field decisions | 55 / 56 |
-| OCR character error rate | 0.267 → 0.086 |
-| OCR CER change | Approximately -68% |
-| Script/language routing | 11 / 11 |
-| Automated tests | 414 |
-| Upload → reviewable record | ~11.5 seconds |
-| Structured fields | 14 |
-| Validation rules | 13 |
-
-### Field-Level Evaluation
-
-In the current evaluation:
-
-- `survey_number`: 75%
-- Other 13 evaluated fields: 100%
-
-These figures are based on the project's current evaluation fixtures and should not be interpreted as production accuracy across all historical land records.
+| Layer          | Technology                   |
+| -------------- | ---------------------------- |
+| Frontend       | React 19 + Vite 8            |
+| Backend        | FastAPI + Uvicorn            |
+| Database       | PostgreSQL / Supabase        |
+| Authentication | JWT + bcrypt                 |
+| OCR            | Tesseract                    |
+| PDF Processing | PyMuPDF                      |
+| AI Extraction  | Gemini + OpenRouter fallback |
+| Storage        | Private object storage       |
+| API            | REST                         |
+| Testing        | Vitest + Pytest              |
 
 ---
 
-## What the Prototype Demonstrates
+## Security by Design
 
-The current system demonstrates a complete software workflow from document ingestion to validated and reviewable structured data.
+The prototype incorporates:
 
-### Demonstrated
+* JWT-based authentication
+* Backend-enforced role authorization
+* bcrypt password hashing
+* Private document storage
+* File signature / content validation
+* Environment-based secret configuration
+* Audit logging
+* Server-side permission checks
+* Protection against trusting raw document content or AI output without validation
 
-- Document upload
-- Document processing
-- OCR
-- AI-assisted extraction
-- 14-field structured output
-- Validation rules
-- Confidence handling
-- Human review
-- Correction workflow
-- Approval/rejection workflow
-- Database persistence
-- Audit trail
-- Role-aware access
-- REST API
-- Controlled Demo Mode
+> **Never trust the browser, raw document content, or AI output without appropriate server-side controls and validation.**
 
 ---
 
-## Current Boundaries
-
-The prototype does not claim to provide:
-
-- Legal determination of land ownership
-- Direct production integration with government LRMS/DILRMP systems
-- Complete coverage of every historical land-record format
-- Proven handwriting accuracy across real-world archives
-- Production-scale concurrency or load testing
-- Government reference databases in the demonstration environment
-
-These areas are part of the planned evolution of the system.
-
----
-
-## Project Structure
-
-A simplified view of the project:
+## Repository Structure
 
 ```text
-Ai-land-records/
+AI_Land_Record/
 │
-├── frontend/
-│   └── React application
+├── frontend/              # React + Vite application
+├── backend/               # FastAPI backend
+│   ├── app/
+│   └── tests/
+├── ai/                    # OCR, extraction, validation, confidence
+├── dataset/               # Documents, ground truth, outputs, evaluation
+├── supabase/              # Database migrations and types
+├── scripts/               # Evaluation / utility scripts
 │
-├── backend/
-│   └── FastAPI application
-│
-├── database/
-│   └── Database / SQL related files
-│
-├── docs/
-│   └── Project documentation
-│
-├── tests/
-│   └── Automated tests
-│
-├── README.md
 ├── data_processing.png
 ├── home_page.png
 ├── login_page.png
-└── ...
+│
+├── 00_MASTER.md
+├── 01_PROBLEM_RESEARCH.md
+├── 04_DATA_DICTIONARY.md
+├── 06_AI_ARCHITECTURE.md
+├── 08_VALIDATION_SPECIFICATION.md
+├── 09_DATABASE_SCHEMA.md
+├── 10_API_SPECIFICATION.md
+├── 11_SECURITY_DESIGN.md
+├── 12_EVALUATION_AND_TESTING.md
+├── 13_DEPLOYMENT_RUNBOOK.md
+└── README.md
 ```
 
-The exact repository structure may contain additional implementation and configuration files.
-
 ---
 
-## Screenshots
+## Quick Start
 
-### Login Page
+### 1. Clone
 
-![Login Page](./login_page.png)
-
-### Home Page
-
-![Home Page](./home_page.png)
-
-### Data Processing
-
-![Data Processing](./data_processing.png)
-
----
-
-## API and Backend
-
-The backend is implemented using FastAPI and exposes REST endpoints for the application's workflow.
-
-The backend is responsible for:
-
-- Authentication
-- Authorization
-- Document processing
-- OCR orchestration
-- AI extraction
-- Validation
-- Record persistence
-- Review workflow
-- Audit information
-- Dashboard / record data
-
-The API layer keeps the frontend separate from the underlying processing and database logic.
-
----
-
-## Database
-
-The application uses PostgreSQL for structured storage.
-
-The database stores information related to:
-
-- Users
-- Documents
-- Processing jobs
-- OCR results
-- Structured records
-- Extracted fields
-- Validation results
-- Review workflow
-- Audit information
-- Supporting reference data
-
-The prototype currently uses **12 database tables**.
-
----
-
-## Why This Approach
-
-The novelty of the prototype is not OCR alone.
-
-The solution combines multiple stages into one workflow:
-
-```text
-OCR
- +
-AI extraction
- +
-Validation rules
- +
-Confidence handling
- +
-Human review
- +
-Audit trail
- =
-Land-record digitization workflow
+```bash
+git clone https://github.com/Aryan4verma/AI_Land_Record.git
+cd AI_Land_Record
 ```
 
-This makes the system focused on the operational problem of turning difficult documents into reviewable structured records, rather than simply extracting text.
+### 2. Backend
+
+```bash
+cd backend
+python -m venv .venv
+
+# Windows
+.venv\Scripts\activate
+
+pip install -r requirements.txt
+```
+
+Configure the required values from the root `.env.example`, then run:
+
+```bash
+python -m uvicorn app.main:app --reload --port 8000
+```
+
+### 3. Frontend
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+### 4. OCR
+
+Tesseract OCR must be installed on the machine because `pytesseract` acts as the Python interface to the OCR engine.
 
 ---
 
-## Future Roadmap
+## Documentation
 
-### Phase 1 — Hardening and Evaluation
+The repository includes detailed engineering specifications for the major subsystems:
 
-- Expand evaluation datasets
-- Improve OCR preprocessing
-- Improve extraction robustness
-- Calibrate confidence scores
-- Strengthen validation coverage
-- Improve correction and audit workflows
-
-### Phase 2 — Controlled Pilot
-
-- Support additional document formats
-- Expand multilingual document handling
-- Test with larger controlled datasets
-- Improve operational dashboards
-- Introduce stronger reference-data workflows
-
-### Phase 3 — Integration and Scale
-
-- Government-system integration where officially permitted
-- LRMS / DILRMP integration
-- GIS and cadastral-map integration
-- Larger-scale processing infrastructure
-- Advanced matching and duplicate detection
-- Broader deployment and monitoring
+* [AI Architecture](./06_AI_ARCHITECTURE.md)
+* [Validation Specification](./08_VALIDATION_SPECIFICATION.md)
+* [Database Schema](./09_DATABASE_SCHEMA.md)
+* [API Specification](./10_API_SPECIFICATION.md)
+* [Security Design](./11_SECURITY_DESIGN.md)
+* [Evaluation & Testing](./12_EVALUATION_AND_TESTING.md)
+* [Deployment Runbook](./13_DEPLOYMENT_RUNBOOK.md)
 
 ---
 
 ## Responsible Use
 
-This system is designed as an AI-assisted decision-support and digitization tool.
+This is an **AI-assisted digitization and decision-support system**.
 
-It does not independently determine legal ownership or replace the authority of a responsible land-record officer.
+It does not independently determine legal ownership and is not intended to replace official land-record authorities, legal verification, or government systems.
 
-Human verification remains an important part of the workflow, particularly where extracted information is uncertain or conflicting.
+Human verification remains part of the workflow, particularly when extracted information is uncertain, inconsistent, or blocked by validation rules.
 
 ---
 
-## Team
+## Current Boundaries
 
-### VisionTech
+The prototype does not claim:
+
+* Complete coverage of every historical land-record format
+* Proven handwriting accuracy across real-world archives
+* Production-scale concurrency or load testing
+* Direct production integration with government LRMS/DILRMP systems
+* Legal determination of land ownership
+
+These are future expansion areas rather than capabilities claimed by the current prototype.
+
+---
+
+## Team VisionTech
 
 **Smart India Hackathon 2026**
-
-**Problem Statement:** 26018  
-**Problem:** Intelligent Land Record Digitization and Validation System  
-**Category:** Software  
+**Problem Statement:** 26018
+**Problem:** Intelligent Land Record Digitization and Validation System
+**Category:** Software
 **Theme:** Smart Automation
 
-Team member names and individual roles can be added here.
-
 ---
 
-## References
-
-- Smart India Hackathon — Problem Statement 26018
-- Tesseract OCR
-- Unicode Standard
-- Digital India Land Records Modernization Programme (DILRMP)
-- Digital Personal Data Protection Act, 2023
-- PostgreSQL Row-Level Security documentation
-
----
-
-## Disclaimer
-
-This repository contains a hackathon prototype.
-
-The evaluation results shown above are based on the project's current synthetic/specimen fixtures and automated tests. They are not presented as official government benchmark results.
-
-The prototype does not establish legal ownership, does not claim production government integration, and should not be used as a substitute for official land-record verification or legal processes.
-
----
-
-## License
-
-This project was developed as part of Smart India Hackathon 2026.
-
-Add the project's license information here if a formal open-source license is selected.
+<p align="center">
+  <b>OCR is only the beginning.</b><br>
+  <b>The goal is a validated, reviewable, and traceable digital land record.</b>
+</p>
