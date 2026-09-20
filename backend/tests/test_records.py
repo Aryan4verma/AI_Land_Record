@@ -12,6 +12,7 @@ from app.records.stores import (
     get_record_query_store,
 )
 from app.reviews.stores import get_record_store
+from app.reviews.stores import get_audit_store
 
 NOW = "2026-09-04T00:00:00+00:00"
 R1 = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
@@ -130,17 +131,28 @@ class FakeDocs:
         return {}
 
 
+class FakeAudit:
+    def __init__(self):
+        self.entries = []
+
+    def append(self, entry):
+        self.entries.append(entry)
+        return entry
+
+
 import pytest
 
 
 @pytest.fixture()
 def fakes():
     records = FakeRecords()
+    audits = FakeAudit()
     app.dependency_overrides[get_record_store] = lambda: records
     app.dependency_overrides[get_record_query_store] = lambda: FakeQuery(records.records)
     app.dependency_overrides[get_dashboard_store] = lambda: FakeDashboard()
     app.dependency_overrides[get_document_store] = lambda: FakeDocs()
-    yield records
+    app.dependency_overrides[get_audit_store] = lambda: audits
+    yield records, audits
     app.dependency_overrides.clear()
 
 
@@ -190,14 +202,19 @@ def test_dashboard_shapes(client, fakes):
 
 
 def test_export_and_mock_lrms(client, fakes):
+    records, audits = fakes
     headers = {"Authorization": f"Bearer {_token(client)}"}
     export = client.get(f"/api/v1/records/{R1}/export", headers=headers).json()
     assert export["record"]["id"] == R1 and export["format_version"] == "v1" and export["exported_at"]
     ver = {"Authorization": f"Bearer {_token(client, 'ver@example.com', 'ver-pass')}"}
     accepted = client.post("/api/v1/integrations/mock-lrms", json={"record_id": R1}, headers=ver).json()
     assert accepted["status"] == "accepted" and "not a live government" in accepted["disclaimer"]
+    assert audits.entries[-1]["action"] == "MOCK_LRMS_DISPATCHED"
+    assert audits.entries[-1]["entity_id"] == R1
+    audit_count = len(audits.entries)
     refused = client.post("/api/v1/integrations/mock-lrms", json={"record_id": R2}, headers=ver)
     assert refused.status_code == 409
+    assert len(audits.entries) == audit_count
     assert client.post("/api/v1/integrations/mock-lrms",
                        json={"record_id": "00000000-0000-4000-8000-000000000000"},
                        headers=ver).status_code == 404

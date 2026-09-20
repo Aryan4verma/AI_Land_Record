@@ -115,6 +115,12 @@ class FakeReviewStore:
             rows = [r for r in rows if r.get("assigned_to") == assigned_to]
         return sorted(rows, key=lambda r: r["created_at"], reverse=True)
 
+    def list_tasks_page(self, status, assigned_to, priority, limit, offset):
+        rows = self.list_tasks(status, assigned_to)
+        if priority:
+            rows = [r for r in rows if r.get("priority") == priority]
+        return rows[offset:offset + limit], len(rows)
+
     def update_task(self, task_id, patch):
         self.tasks[task_id].update(patch)
         return self.tasks[task_id]
@@ -136,6 +142,10 @@ class FakeAuditStore:
 
     def list_for(self, entity_type, entity_id):
         return [e for e in self.entries if e["entity_type"] == entity_type and e["entity_id"] == entity_id]
+
+    def list_for_page(self, entity_type, entity_id, limit, offset):
+        rows = self.list_for(entity_type, entity_id)
+        return rows[offset:offset + limit], len(rows)
 
 
 @pytest.fixture()
@@ -184,6 +194,30 @@ def test_low_confidence_record_creates_review(client, fakes):
     assert body["status"] == "PENDING" and body["priority"] == "HIGH"
     actions = [e["action"] for e in audits.list_for("land_record", REC_BAD)]
     assert "REVIEW_CREATED" in actions
+
+
+def test_review_queue_filters_and_opt_in_pagination_are_server_side(client, fakes):
+    headers = _op(client)
+    client.post("/api/v1/reviews", json={"land_record_id": REC_BAD, "reason": "high", "priority": "HIGH"}, headers=headers)
+    client.post("/api/v1/reviews", json={"land_record_id": REC_OK, "reason": "low", "priority": "LOW"}, headers=headers)
+
+    legacy = client.get("/api/v1/reviews", params={"status": "PENDING"}, headers=headers)
+    assert legacy.status_code == 200 and isinstance(legacy.json(), list)
+    page = client.get("/api/v1/reviews", params={"status": "PENDING", "priority": "HIGH", "limit": 1, "offset": 0}, headers=headers)
+    body = page.json()
+    assert page.status_code == 200
+    assert body["total"] == 1 and body["limit"] == 1 and body["offset"] == 0
+    assert len(body["items"]) == 1 and body["items"][0]["priority"] == "HIGH"
+
+
+def test_record_audit_pagination_keeps_legacy_list_and_is_authorized(client, fakes):
+    _, _, audits = fakes
+    headers = _op(client)
+    client.post("/api/v1/reviews", json={"land_record_id": REC_BAD, "reason": "r"}, headers=headers)
+    page = client.get(f"/api/v1/records/{REC_BAD}/audit", params={"limit": 1}, headers=headers)
+    body = page.json()
+    assert page.status_code == 200 and body["total"] == 1 and len(body["items"]) == 1
+    assert client.get(f"/api/v1/records/{REC_BAD}/audit", params={"limit": 1}, headers=_user(client)).status_code == 403
 
 
 def test_user_role_is_denied_every_privileged_review_action(client, fakes):
@@ -306,6 +340,21 @@ def test_reject_requires_reason_and_cancels_open_reviews(client, fakes):
     assert reviews.get_task(task_id)["status"] == "CANCELLED"
     entry = next(e for e in audits.list_for("land_record", REC_BAD) if e["action"] == "RECORD_REJECTED")
     assert entry["metadata"]["cancelled_reviews"] == [task_id]
+
+
+def test_duplicate_rejection_is_a_conflict_without_second_audit(client, fakes):
+    _, _, audits = fakes
+    headers = _ver(client)
+    first = client.post(f"/api/v1/records/{REC_BAD}/reject",
+                        json={"reason": "Document illegible"}, headers=headers)
+    assert first.status_code == 200
+    audit_count = len(audits.list_for("land_record", REC_BAD))
+
+    second = client.post(f"/api/v1/records/{REC_BAD}/reject",
+                         json={"reason": "Retry request"}, headers=headers)
+    assert second.status_code == 409
+    assert second.json()["error"]["code"] == "RECORD_FINALIZED"
+    assert len(audits.list_for("land_record", REC_BAD)) == audit_count
 
 
 def test_duplicate_complete_rejected_and_correct_on_closed_rejected(client, fakes):

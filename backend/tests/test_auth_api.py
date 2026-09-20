@@ -49,6 +49,22 @@ def test_me_returns_current_user_without_password_hash(client):
     }
 
 
+def test_deactivated_account_token_is_rejected_on_read_routes(client):
+    from tests.conftest import _USERS
+
+    login = client.post("/api/v1/auth/login", json={"email": "op@example.com", "password": "op-pass"})
+    token = login.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+    original_status = _USERS["op@example.com"]["status"]
+    _USERS["op@example.com"]["status"] = "suspended"
+    try:
+        response = client.get("/api/v1/records", headers=headers)
+        assert response.status_code == 401
+        assert response.json()["error"]["code"] == "INVALID_TOKEN"
+    finally:
+        _USERS["op@example.com"]["status"] = original_status
+
+
 def test_logout_ok(client):
     response = client.post("/api/v1/auth/logout")
     assert response.status_code == 200

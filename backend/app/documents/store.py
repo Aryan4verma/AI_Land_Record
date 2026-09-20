@@ -15,6 +15,8 @@ class DocumentStore(Protocol):
     def get(self, document_id: str) -> dict[str, Any] | None: ...
     def update_status(self, document_id: str, status: str) -> dict[str, Any]: ...
     def claim_for_processing(self, document_id: str) -> bool: ...
+    def release_processing_claim(self, document_id: str, previous_status: str) -> bool: ...
+    def mark_failed_if_processing(self, document_id: str) -> bool: ...
 
 
 class SupabaseDocumentStore:
@@ -77,6 +79,44 @@ class SupabaseDocumentStore:
         if not rows:
             raise AppError(404, "DOCUMENT_NOT_FOUND", "The requested document was not found.")
         return rows[0]
+
+    def mark_failed_if_processing(self, document_id: str) -> bool:
+        """Fail only the job's still-processing document.
+
+        A losing/late duplicate worker must not overwrite a successful or
+        terminal result with FAILED while it is recording its own job error.
+        """
+        try:
+            result = (
+                self.client.table("documents")
+                .update({"processing_status": "FAILED"})
+                .eq("id", document_id)
+                .eq("processing_status", "PROCESSING")
+                .execute()
+            )
+        except Exception as exc:
+            raise classify_db_error(
+                exc, subject="Document store", action="documents.mark_failed_if_processing") from exc
+        return bool(result.data)
+
+    def release_processing_claim(self, document_id: str, previous_status: str) -> bool:
+        """Undo a claim when the corresponding job could not be created.
+
+        The conditional update prevents a late request from releasing a claim
+        that has already been taken over by a worker or reconciler.
+        """
+        try:
+            result = (
+                self.client.table("documents")
+                .update({"processing_status": previous_status})
+                .eq("id", document_id)
+                .eq("processing_status", "PROCESSING")
+                .execute()
+            )
+        except Exception as exc:
+            raise classify_db_error(
+                exc, subject="Document store", action="documents.release_processing_claim") from exc
+        return bool(result.data)
 
 
 def get_document_store(request: Request) -> DocumentStore:

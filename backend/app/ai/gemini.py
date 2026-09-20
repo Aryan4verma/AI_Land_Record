@@ -53,21 +53,16 @@ class GeminiAdapter:
     ) -> dict:
         """Safe facts for this failure. The query string (which carries the
         API key) is stripped by rebuilding scheme://host/path manually."""
-        endpoint, status, body = "unknown", None, ""
+        endpoint, status = "unknown", None
         if response is not None:
             url = response.request.url
             endpoint = f"{url.scheme}://{url.host}{url.path}"
             status = response.status_code
-            try:
-                body = response.text[:500]
-            except Exception:
-                body = ""
         return {
             "http_status": status,
             "endpoint": endpoint,
             "model": self._model,
             "key_configured": bool(self._api_key),
-            "body": body,
             "exception": type(exc).__name__ if exc is not None else None,
             "code_path": code_path,
         }

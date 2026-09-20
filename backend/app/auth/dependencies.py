@@ -36,9 +36,18 @@ def normalize_role(value: object) -> str:
     return value.strip().lower() if isinstance(value, str) else ""
 
 
-async def get_current_user(token: str = Depends(oauth2_scheme)) -> dict:
+async def get_current_user(
+    token: str = Depends(oauth2_scheme),
+    store: Any = Depends(get_user_store),
+) -> dict:
     claims = decode_access_token(token, get_settings().auth_secret)
-    role = normalize_role(claims.get("role"))
+    claimed_role = normalize_role(claims.get("role"))
+    if claimed_role not in ROLE_HIERARCHY:
+        raise AppError(401, "INVALID_TOKEN", "Invalid authentication token.")
+    current = store.get_by_id(claims["sub"])
+    if current is None or current.get("status") != "active":
+        raise AppError(401, "INVALID_TOKEN", "Invalid authentication token.")
+    role = normalize_role(current.get("role"))
     if role not in ROLE_HIERARCHY:
         raise AppError(401, "INVALID_TOKEN", "Invalid authentication token.")
     return {"id": claims["sub"], "role": role}

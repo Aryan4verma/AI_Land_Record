@@ -1,5 +1,6 @@
 """Document response schemas. Passwords/keys are never part of these."""
 from datetime import datetime
+from typing import Any
 from uuid import UUID
 
 from pydantic import BaseModel
@@ -29,13 +30,34 @@ class DocumentOut(BaseModel):
 class DocumentStatusOut(BaseModel):
     document_id: UUID
     status: str
+    job_id: UUID | None = None
+    job_status: str | None = None
+    error_code: str | None = None
+    started_at: datetime | None = None
+    completed_at: datetime | None = None
+
+
+class ExtractedFieldOut(BaseModel):
+    """Stored extraction plus optional source evidence.
+
+    Source fields remain nullable: the backend must not manufacture page or
+    coordinate claims when the extraction provider did not supply them.
+    """
+    field_name: str
+    value: str | None = None
+    confidence: float | None = None
+    source_page: int | None = None
+    source_text: str | None = None
+    bounding_box: Any | None = None
+    extraction_status: str | None = None
+    validation_status: str | None = None
 
 
 class DocumentExtractionOut(BaseModel):
     document_id: UUID
     record_id: UUID
     status: str
-    fields: list[dict] = []
+    fields: list[ExtractedFieldOut] = []
 
 
 class DocumentValidationOut(BaseModel):

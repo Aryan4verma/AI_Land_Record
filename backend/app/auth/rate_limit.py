@@ -11,25 +11,28 @@ throttled. The key pairs the client address with the submitted email so one
 attacker cannot lock out an unrelated account from a different address.
 
 Known limits, stated rather than hidden: counters reset when the process
-restarts and are not shared across workers. Deployments that run multiple
-workers or need durable throttling should move this behind a shared store or
-the edge proxy.
+restarts, are not shared across workers, and are bounded to 10,000 active
+client/email keys. Deployments that run multiple workers or need durable
+throttling should move this behind a shared store or the edge proxy.
 """
 from __future__ import annotations
 
 import time
-from collections import defaultdict
 
 
 class LoginRateLimiter:
-    def __init__(self, max_attempts: int = 10, window_seconds: int = 300) -> None:
+    def __init__(self, max_attempts: int = 10, window_seconds: int = 300, max_keys: int = 10_000) -> None:
         self.max_attempts = max_attempts
         self.window_seconds = window_seconds
-        self._hits: dict[str, list[float]] = defaultdict(list)
+        self.max_keys = max_keys
+        self._hits: dict[str, list[float]] = {}
 
     def _prune(self, key: str, now: float) -> list[float]:
-        recent = [t for t in self._hits[key] if now - t < self.window_seconds]
-        self._hits[key] = recent
+        recent = [t for t in self._hits.get(key, []) if now - t < self.window_seconds]
+        if recent:
+            self._hits[key] = recent
+        else:
+            self._hits.pop(key, None)
         return recent
 
     def is_blocked(self, key: str) -> bool:
@@ -38,7 +41,10 @@ class LoginRateLimiter:
     def record_failure(self, key: str) -> None:
         now = time.monotonic()
         self._prune(key, now)
-        self._hits[key].append(now)
+        if key not in self._hits and len(self._hits) >= self.max_keys:
+            oldest = min(self._hits, key=lambda candidate: self._hits[candidate][-1])
+            self._hits.pop(oldest, None)
+        self._hits.setdefault(key, []).append(now)
 
     def reset(self, key: str) -> None:
         self._hits.pop(key, None)

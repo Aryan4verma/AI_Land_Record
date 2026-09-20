@@ -54,7 +54,9 @@ def export_record(record_id: str, records: Any) -> dict:
     return detail
 
 
-def mock_lrms_submit(record_id: str, records: Any) -> dict:
+def mock_lrms_submit(
+    record_id: str, records: Any, audits: Any | None = None, *, user_id: str | None = None,
+) -> dict:
     """Demonstration-only receiver. Accepts APPROVED records; never claims
     to be a live government integration (10 section 11)."""
     record = records.get_record(record_id)
@@ -63,6 +65,15 @@ def mock_lrms_submit(record_id: str, records: Any) -> dict:
     if record.get("status") != "APPROVED":
         raise AppError(409, "MOCK_LRMS_NOT_APPROVED",
                        f"Mock LRMS only accepts APPROVED records (current status: {record.get('status')}).")
-    return {"integration": "mock-lrms", "status": "accepted", "record_id": record["id"],
+    result = {"integration": "mock-lrms", "status": "accepted", "record_id": record["id"],
             "received_at": datetime.now(timezone.utc).isoformat(),
             "disclaimer": "Demonstration endpoint — not a live government integration."}
+    if audits is not None and user_id is not None:
+        audits.append({
+            "user_id": user_id,
+            "entity_type": "land_record",
+            "entity_id": str(record["id"]),
+            "action": "MOCK_LRMS_DISPATCHED",
+            "metadata": {"integration": "mock-lrms", "status": "accepted"},
+        })
+    return result

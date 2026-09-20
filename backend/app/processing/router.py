@@ -83,24 +83,54 @@ def start_processing(
         raise AppError(409, "DOCUMENT_FINALIZED", f"Documents in status {status} cannot be reprocessed.")
     if status not in REPROCESSABLE and status not in ("REVIEW_REQUIRED", "READY_FOR_APPROVAL"):
         raise AppError(409, "DOCUMENT_NOT_PROCESSABLE", f"Documents in status {status} cannot be processed.")
+    if mode == "demo":
+        # Resolve the fixture before claiming the document. An invalid demo
+        # input must not create a claim that has no corresponding job.
+        build_demo_stages(document.get("checksum") or "",
+                          root=get_settings().demo_fixture_directory or None)
+
     # Atomic claim BEFORE creating the job. The status checks above are
     # advisory (they produce precise 409 messages); this is the one that
     # actually serializes concurrent requests, so a double-submit cannot
     # start two pipelines — and cannot spend a second AI call.
     if not documents.claim_for_processing(str(document["id"])):
         raise AppError(409, "PROCESSING_IN_PROGRESS", "This document is already being processed.")
-    if mode == "demo":
-        # Resolve the fixture BEFORE accepting the job, so an unrecognised
-        # document is refused immediately instead of failing in the background.
-        build_demo_stages(document.get("checksum") or "",
-                          root=get_settings().demo_fixture_directory or None)
-
-    job = jobs.create_job({
-        "document_id": str(document["id"]), "status": "PENDING",
-        # Existing column, documented values: distinguishes the two paths in
-        # the database without a migration.
-        "pipeline_version": DEMO_PIPELINE_VERSION if mode == "demo" else "v1",
-    })
+    try:
+        job = jobs.create_job({
+            "document_id": str(document["id"]), "status": "PENDING",
+            # Existing column, documented values: distinguishes the two paths in
+            # the database without a migration.
+            "pipeline_version": DEMO_PIPELINE_VERSION if mode == "demo" else "v1",
+        })
+    except Exception:
+        # A claim without a job is not retryable through the normal API. Undo
+        # only this request's claim; the conditional store operation protects
+        # against releasing a claim that another worker has already advanced.
+        # If the insert committed but its response was lost, keep PROCESSING:
+        # releasing it would let a client retry and create a duplicate job.
+        active_job_exists = True
+        try:
+            has_active = getattr(jobs, "has_active_job_for_document", None)
+            if callable(has_active):
+                active_job_exists = bool(has_active(str(document["id"])))
+            else:
+                active_job_exists = any(
+                    item.get("status") in ("PENDING", "RUNNING")
+                    for item in jobs.list_jobs_for_document(str(document["id"]))
+                )
+        except Exception:
+            # Unknown job state is safer as a retained claim; startup
+            # reconciliation can recover it once the database is reachable.
+            pass
+        release = getattr(documents, "release_processing_claim", None)
+        if release is not None and not active_job_exists:
+            try:
+                release(str(document["id"]), status)
+            except Exception:
+                # Preserve the original job-creation error. Startup
+                # reconciliation remains the last-resort recovery path.
+                pass
+        raise
     background_tasks.add_task(run, str(job["id"]), str(document["id"]), user["id"],  # type: ignore[arg-type]
                               mode, document.get("checksum"))
     return {"job_id": job["id"], "status": job["status"]}

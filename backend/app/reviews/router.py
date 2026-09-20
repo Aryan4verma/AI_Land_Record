@@ -5,7 +5,7 @@ No polished UI here — API-level workflow for the QA frontend and tests.
 """
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Query, Request
 
 from ..auth.dependencies import get_current_user, require_role
 from ..errors import AppError
@@ -17,7 +17,10 @@ from .schemas import (
     ReviewCreate,
     ReviewDetailOut,
     ReviewOut,
+    ReviewPageOut,
     ReviewStatusFilter,
+    Priority,
+    AuditPageOut,
 )
 from .service import (
     approve_record,
@@ -60,15 +63,24 @@ def create_review_endpoint(
     )
 
 
-@router.get("/api/v1/reviews", response_model=list[ReviewOut])
+@router.get("/api/v1/reviews", response_model=list[ReviewOut] | ReviewPageOut)
 def list_reviews(
     request: Request,
     status: ReviewStatusFilter | None = None,
     assigned_to: UUID | None = None,
+    priority: Priority | None = None,
+    limit: int | None = Query(None, ge=1, le=100),
+    offset: int = Query(0, ge=0),
     user: dict = Depends(require_role("operator")),
     reviews: ReviewStore = Depends(get_review_store),
-) -> list:
+) -> list | dict:
     _ = (request, user)
+    if priority is not None or limit is not None or offset:
+        page_limit = limit or 100
+        items, total = reviews.list_tasks_page(
+            status, str(assigned_to) if assigned_to else None, priority, page_limit, offset,
+        )
+        return {"items": items, "limit": page_limit, "offset": offset, "total": total}
     return reviews.list_tasks(status, str(assigned_to) if assigned_to else None)
 
 
@@ -171,16 +183,22 @@ def reject_record_endpoint(
     return {"record_id": rejected["id"], "status": rejected["status"]}
 
 
-@router.get("/api/v1/records/{record_id}/audit", response_model=list[AuditOut])
+@router.get("/api/v1/records/{record_id}/audit", response_model=list[AuditOut] | AuditPageOut)
 def record_audit(
     record_id: UUID,
     request: Request,
+    limit: int | None = Query(None, ge=1, le=100),
+    offset: int = Query(0, ge=0),
     user: dict = Depends(require_role("operator")),
     records: RecordStore = Depends(get_record_store),
     audits: AuditStore = Depends(get_audit_store),
-) -> list:
+) -> list | dict:
     _ = request
     if records.get_record(str(record_id)) is None:
         raise AppError(404, "RECORD_NOT_FOUND", "The requested record was not found.")
     _ = user
+    if limit is not None or offset:
+        page_limit = limit or 100
+        items, total = audits.list_for_page("land_record", str(record_id), page_limit, offset)
+        return {"items": items, "limit": page_limit, "offset": offset, "total": total}
     return audits.list_for("land_record", str(record_id))

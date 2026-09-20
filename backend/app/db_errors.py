@@ -15,11 +15,9 @@ Classification (10_API_SPECIFICATION section 13):
     08/53/57/58xxx       -> 503  connection, resource, operator intervention
     anything else        -> 500  unexpected persistence failure
 
-Diagnostics: the SQLSTATE, exception type and a truncated driver message are
-logged for every classified failure. Messages returned to clients stay generic
-— they never echo the offending value — while the log keeps enough to debug.
-No credential, key or connection string is ever logged: these driver
-exceptions carry SQL/data context only, and the message is length-capped.
+Diagnostics log only the SQLSTATE, exception type, and operation. Driver
+messages are deliberately omitted because they can contain submitted values,
+connection details, or provider-specific sensitive context.
 """
 from __future__ import annotations
 
@@ -36,7 +34,6 @@ log = get_logger(__name__)
 # words in a driver message — "ERROR" is also five uppercase chars —
 # from being mistaken for a code.
 _SQLSTATE = re.compile(r"\b(\d{2}[0-9A-Z]{3})\b")
-_MAX_LOGGED_MESSAGE = 300
 
 # Permanent, caller-caused faults.
 _DATA_CLASS = "22"          # data exception: 22008 datetime, 22P02 invalid text, ...
@@ -91,10 +88,9 @@ def classify_db_error(exc: BaseException, *, subject: str, action: str) -> AppEr
     ("create record") — both appear in logs only, never in client output.
     """
     state = sqlstate_of(exc)
-    message = str(exc).replace("\n", " ")[:_MAX_LOGGED_MESSAGE]
     log.warning(
-        "database error: action=%s sqlstate=%s type=%s detail=%s",
-        action, state or "unknown", type(exc).__name__, message,
+        "database error: action=%s sqlstate=%s type=%s",
+        action, state or "unknown", type(exc).__name__,
     )
 
     if state and (state.startswith(_DATA_CLASS) or state in (_CHECK_VIOLATION, _NOT_NULL)):

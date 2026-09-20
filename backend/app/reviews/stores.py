@@ -31,12 +31,17 @@ class RecordStore(Protocol):
     def list_reference_rows(self) -> list[dict[str, Any]]: ...
     def replace_ocr_results(self, document_id: str, rows: list[dict[str, Any]]) -> None: ...
     def list_record_summaries(self) -> list[dict[str, Any]]: ...
+    def persist_processing_result(self, **kwargs: Any) -> dict[str, Any]: ...
 
 
 class ReviewStore(Protocol):
     def create_task(self, row: dict[str, Any]) -> dict[str, Any]: ...
     def get_task(self, task_id: str) -> dict[str, Any] | None: ...
     def list_tasks(self, status: str | None, assigned_to: str | None) -> list[dict[str, Any]]: ...
+    def list_tasks_page(
+        self, status: str | None, assigned_to: str | None, priority: str | None,
+        limit: int, offset: int,
+    ) -> tuple[list[dict[str, Any]], int]: ...
     def update_task(self, task_id: str, patch: dict[str, Any]) -> dict[str, Any]: ...
     def open_tasks_for_record(self, record_id: str) -> list[dict[str, Any]]: ...
 
@@ -44,6 +49,9 @@ class ReviewStore(Protocol):
 class AuditStore(Protocol):
     def append(self, entry: dict[str, Any]) -> dict[str, Any]: ...
     def list_for(self, entity_type: str, entity_id: str) -> list[dict[str, Any]]: ...
+    def list_for_page(
+        self, entity_type: str, entity_id: str, limit: int, offset: int,
+    ) -> tuple[list[dict[str, Any]], int]: ...
 
 
 class SupabaseRecordStore:
@@ -112,7 +120,12 @@ class SupabaseRecordStore:
 
     def list_reference_rows(self) -> list[dict[str, Any]]:
         try:
-            result = self.client.table("reference_data").select("*").eq("status", "active").execute()
+            result = (
+                self.client.table("reference_data")
+                .select("id,reference_type,code,name,parent_id,version,status")
+                .eq("status", "active")
+                .execute()
+            )
         except Exception as exc:
             raise classify_db_error(
                 exc, subject="Record store", action="reviews.list_reference_rows") from exc
@@ -126,6 +139,26 @@ class SupabaseRecordStore:
         except Exception as exc:
             raise classify_db_error(
                 exc, subject="Record store", action="reviews.replace_ocr_results") from exc
+
+    def persist_processing_result(self, **kwargs: Any) -> dict[str, Any]:
+        """Commit the final processing result through one PostgreSQL function.
+
+        OCR/AI work and the initial RUNNING/PROCESSING state are deliberately
+        outside this call.  The RPC owns the final result unit so a failure in
+        any child insert, review creation, state update, or completion audit
+        rolls back the complete unit.
+        """
+        try:
+            result = self.client.rpc("persist_processing_result", kwargs).execute()
+        except Exception as exc:
+            raise classify_db_error(
+                exc, subject="Record store", action="reviews.persist_processing_result") from exc
+        data = result.data
+        if isinstance(data, list):
+            data = data[0] if data else None
+        if not isinstance(data, dict) or not data.get("record_id"):
+            raise AppError(503, "DATABASE_UNAVAILABLE", "Processing result was not committed.")
+        return data
 
     def list_record_summaries(self) -> list[dict[str, Any]]:
         try:
@@ -201,7 +234,9 @@ class SupabaseReviewStore:
 
     def list_tasks(self, status: str | None, assigned_to: str | None) -> list[dict[str, Any]]:
         try:
-            query = self.client.table("review_tasks").select("*")
+            query = self.client.table(
+                "review_tasks"
+            ).select("id,land_record_id,assigned_to,status,priority,reason,created_at,completed_at")
             if status:
                 query = query.eq("status", status)
             if assigned_to:
@@ -211,6 +246,49 @@ class SupabaseReviewStore:
             raise classify_db_error(
                 exc, subject="Review store", action="reviews.list_tasks") from exc
         return result.data or []
+
+    def list_tasks_page(
+        self, status: str | None, assigned_to: str | None, priority: str | None,
+        limit: int, offset: int,
+    ) -> tuple[list[dict[str, Any]], int]:
+        try:
+            query = self.client.table(
+                "review_tasks"
+            ).select("id,land_record_id,assigned_to,status,priority,reason,created_at,completed_at", count="exact")
+            if status:
+                query = query.eq("status", status)
+            if assigned_to:
+                query = query.eq("assigned_to", assigned_to)
+            if priority:
+                query = query.eq("priority", priority)
+            result = (
+                query.order("created_at", desc=True)
+                .order("id", desc=True)
+                .range(offset, offset + limit - 1)
+                .execute()
+            )
+            return result.data or [], int(result.count or 0)
+        except Exception as exc:
+            if getattr(exc, "code", "") == "PGRST103":
+                # Keep the response useful for a page beyond the end without
+                # hiding other database failures.
+                try:
+                    count_query = self.client.table("review_tasks").select("id", count="exact")
+                    if status:
+                        count_query = count_query.eq("status", status)
+                    if assigned_to:
+                        count_query = count_query.eq("assigned_to", assigned_to)
+                    if priority:
+                        count_query = count_query.eq("priority", priority)
+                    counted = count_query.limit(1).execute()
+                    return [], int(counted.count or 0)
+                except Exception as inner:
+                    raise classify_db_error(
+                        inner, subject="Review store", action="reviews.list_tasks_page.count"
+                    ) from inner
+            raise classify_db_error(
+                exc, subject="Review store", action="reviews.list_tasks_page"
+            ) from exc
 
     def update_task(self, task_id: str, patch: dict[str, Any]) -> dict[str, Any]:
         try:
@@ -261,6 +339,41 @@ class SupabaseAuditStore:
             raise classify_db_error(
                 exc, subject="Audit store", action="reviews.list_for") from exc
         return result.data or []
+
+    def list_for_page(
+        self, entity_type: str, entity_id: str, limit: int, offset: int,
+    ) -> tuple[list[dict[str, Any]], int]:
+        try:
+            result = (
+                self.client.table("audit_logs")
+                .select("*", count="exact")
+                .eq("entity_type", entity_type)
+                .eq("entity_id", entity_id)
+                .order("timestamp", desc=False)
+                .order("id", desc=False)
+                .range(offset, offset + limit - 1)
+                .execute()
+            )
+            return result.data or [], int(result.count or 0)
+        except Exception as exc:
+            if getattr(exc, "code", "") == "PGRST103":
+                try:
+                    counted = (
+                        self.client.table("audit_logs")
+                        .select("id", count="exact")
+                        .eq("entity_type", entity_type)
+                        .eq("entity_id", entity_id)
+                        .limit(1)
+                        .execute()
+                    )
+                    return [], int(counted.count or 0)
+                except Exception as inner:
+                    raise classify_db_error(
+                        inner, subject="Audit store", action="reviews.list_for_page.count"
+                    ) from inner
+            raise classify_db_error(
+                exc, subject="Audit store", action="reviews.list_for_page"
+            ) from exc
 
 
 def get_record_store(request: Request) -> RecordStore:

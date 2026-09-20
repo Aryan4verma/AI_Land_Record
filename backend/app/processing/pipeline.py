@@ -35,7 +35,7 @@ from ..errors import AppError
 from ..records.typed_values import coerce_typed_columns
 from ..documents.store import SupabaseDocumentStore
 from ..logging_config import get_logger
-from ..reviews.service import build_reference, create_review
+from ..reviews.service import build_reference
 from ..reviews.stores import SupabaseAuditStore, SupabaseRecordStore, SupabaseReviewStore
 
 log = get_logger(__name__)
@@ -109,10 +109,12 @@ def run_pipeline(job_id: str, document_id: str, deps: PipelineDeps) -> None:
 
 def _fail(jobs: Any, documents: Any, audits: Any, job_id: str, document_id: str,
           user_id: str, code: str, message: str) -> None:
+    fail_if_processing = getattr(documents, "mark_failed_if_processing", None)
     for action, label in (
         (lambda: jobs.update_job(job_id, {"status": "FAILED", "completed_at": _now(),
                                           "error_code": code, "error_message": message}), "job"),
-        (lambda: documents.update_status(document_id, "FAILED"), "document"),
+        (lambda: (fail_if_processing(document_id) if fail_if_processing
+                  else documents.update_status(document_id, "FAILED")), "document"),
         (lambda: _audit(audits, document_id, user_id, "PROCESSING_FAILED",
                         {"job_id": job_id, "error_code": code}), "audit"),
     ):
@@ -167,9 +169,10 @@ def _run(job_id: str, document_id: str, deps: PipelineDeps,
     issues = _with_duplicates(records, document_id, normalized, issues)
     verdict = record_verdict(issues)
 
-    record_id, dropped = _persist(records, document, pages, result, normalized, issues, verdict)
-    _finish(jobs, documents, audits, reviews, records, job_id, document, verdict, deps, record_id,
-            issues, result, dropped)
+    bind_context = getattr(records, "bind_processing_context", None)
+    if bind_context is not None:
+        bind_context(jobs=jobs, documents=documents, reviews=reviews, audits=audits)
+    _persist(job_id, records, document, pages, result, normalized, issues, verdict, deps)
 
 
 def _ocr(raw: bytes, file_name: str, deps: PipelineDeps, declared_language: object = None) -> list:
@@ -225,21 +228,9 @@ def _with_duplicates(records: Any, document_id: str, normalized: dict, issues: l
     return issues
 
 
-def _persist(records: Any, document: dict, pages: list,
-             result: Any, normalized: dict, issues: list, verdict: str) -> tuple[str, dict]:
+def _persist(job_id: str, records: Any, document: dict, pages: list, result: Any,
+             normalized: dict, issues: list, verdict: str, deps: PipelineDeps) -> tuple[str, dict]:
     doc_id = str(document["id"])
-    try:
-        records.replace_ocr_results(doc_id, [
-            {"document_id": doc_id, "page_number": page.page_number, "text": page.text,
-             "ocr_confidence": page.confidence,
-             "structured_output_reference": {"lines": len(page.lines), "width": page.width, "height": page.height}}
-            for page in pages
-        ])
-    except AppError as exc:
-        raise PipelineFail(exc.code, exc.message) from exc
-    except Exception as exc:
-        raise PipelineFail("PERSIST_FAILED", f"Could not store OCR output ({type(exc).__name__}).") from exc
-
     record_status = "READY_FOR_APPROVAL" if verdict == "READY_FOR_APPROVAL" else "REVIEW_REQUIRED"
     # Typed columns (DATE/NUMERIC) only ever receive values Postgres can
     # represent. An unparseable value becomes NULL *here* and nowhere else:
@@ -250,64 +241,13 @@ def _persist(records: Any, document: dict, pages: list,
     if dropped:
         log.info("typed columns not representable, stored NULL: %s",
                  ",".join(sorted(dropped)))
-    try:
-        existing = records.get_record_by_document(doc_id)
-        if existing is None:
-            record = records.create_record({"document_id": doc_id, **row})
-        else:
-            record = records.update_record(str(existing["id"]), row)
-        record_id = str(record["id"])
-        records.replace_extracted_fields(record_id, [
-            {"land_record_id": record_id, "field_name": name,
-             "value": item.value, "confidence": item.confidence,
-             "source_page": None, "source_text": None, "bounding_box": None,
-             "extraction_status": getattr(item, "extraction_status", "EXTRACTED"),
-             "validation_status": "NOT_CHECKED"}
-            for name, item in result.fields.items()
-        ])
-        records.replace_validation_results(record_id, [
-            {"land_record_id": record_id, "rule_id": issue.rule_id, "field_name": issue.field_name,
-             "status": issue.status, "severity": issue.severity, "message": issue.message}
-            for issue in issues
-        ])
-    except PipelineFail:
-        raise
-    except AppError as exc:
-        # Classified by the store layer: keep the real reason instead of
-        # flattening every fault into one opaque code.
-        raise PipelineFail(exc.code, exc.message) from exc
-    except Exception as exc:
-        raise PipelineFail("PERSIST_FAILED", f"Could not store record ({type(exc).__name__}).") from exc
-    return record_id, dropped
-
-
-def _finish(jobs: Any, documents: Any, audits: Any, reviews: Any, records: Any, job_id: str,
-            document: dict, verdict: str, deps: PipelineDeps, record_id: str, issues: list,
-            result: Any, dropped: dict | None = None) -> None:
-    doc_id = str(document["id"])
     if verdict == "READY_FOR_APPROVAL":
         doc_status = "READY_FOR_APPROVAL"
     elif verdict == "BLOCKED":
         doc_status = "VALIDATION_FAILED"
     else:
         doc_status = "REVIEW_REQUIRED"
-    documents.update_status(doc_id, doc_status)
-
-    review_created: str | None = None
-    if verdict != "READY_FOR_APPROVAL":
-        try:
-            task = create_review(
-                user={"id": deps.requesting_user_id}, record_id=record_id,
-                reason=f"Automatic review: validation verdict {verdict} ({len(issues)} issue(s))",
-                priority="HIGH" if verdict == "BLOCKED" else "MEDIUM",
-                records=records, reviews=reviews, audits=audits,
-            )
-            review_created = str(task["id"])
-        except Exception:
-            log.warning("automatic review creation failed")
-    jobs.update_job(job_id, {"status": "SUCCEEDED", "completed_at": _now()})
-    metadata = {"job_id": job_id, "verdict": verdict, "record_id": record_id,
-                "review_created": review_created,
+    metadata = {"job_id": job_id, "verdict": verdict,
                 "execution_mode": deps.execution_mode,
                 **({"fixture_id": deps.fixture_id} if deps.fixture_id else {}),
                 **({"external_ai_calls": 0, "external_ocr_calls": 0}
@@ -320,4 +260,43 @@ def _finish(jobs: Any, documents: Any, audits: Any, reviews: Any, records: Any, 
         # value that could not be represented. The raw value also remains in
         # extracted_fields; this makes the coercion visible in the trail.
         metadata["unrepresentable_values"] = {k: str(v) for k, v in sorted(dropped.items())}
-    _audit(audits, doc_id, deps.requesting_user_id, "PROCESSING_COMPLETED", metadata)
+    ocr_rows = [
+        {"page_number": page.page_number, "text": page.text,
+         "ocr_confidence": page.confidence,
+         "structured_output_reference": {"lines": len(page.lines), "width": page.width, "height": page.height}}
+        for page in pages
+    ]
+    extracted_rows = [
+        {"field_name": name, "value": item.value, "confidence": item.confidence,
+         "source_page": None, "source_text": None, "bounding_box": None,
+         "extraction_status": getattr(item, "extraction_status", "EXTRACTED"),
+         "validation_status": "NOT_CHECKED"}
+        for name, item in result.fields.items()
+    ]
+    validation_rows = [
+        {"rule_id": issue.rule_id, "field_name": issue.field_name,
+         "status": issue.status, "severity": issue.severity, "message": issue.message}
+        for issue in issues
+    ]
+    review_priority = "HIGH" if verdict == "BLOCKED" else "MEDIUM"
+    review_reason = f"Automatic review: validation verdict {verdict} ({len(issues)} issue(s))"
+    try:
+        committed = records.persist_processing_result(
+            p_job_id=job_id,
+            p_document_id=doc_id,
+            p_user_id=deps.requesting_user_id,
+            p_ocr_results=ocr_rows,
+            p_record=row,
+            p_extracted_fields=extracted_rows,
+            p_validation_results=validation_rows,
+            p_document_status=doc_status,
+            p_verdict=verdict,
+            p_review_priority=review_priority,
+            p_review_reason=review_reason,
+            p_completion_metadata=metadata,
+        )
+    except AppError as exc:
+        raise PipelineFail(exc.code, exc.message) from exc
+    except Exception as exc:
+        raise PipelineFail("PERSIST_FAILED", f"Could not commit processing result ({type(exc).__name__}).") from exc
+    return str(committed["record_id"]), dropped

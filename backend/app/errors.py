@@ -45,7 +45,17 @@ async def _http_error_handler(request: Request, exc: StarletteHTTPException) -> 
         422: "VALIDATION_ERROR",
         429: "RATE_LIMITED",
     }.get(exc.status_code, f"HTTP_{exc.status_code}")
-    return JSONResponse(_envelope(request, code, str(exc.detail)), exc.status_code)
+    messages = {
+        400: "Bad request.",
+        401: "Authentication is required.",
+        403: "You are not allowed to perform this action.",
+        404: "The requested resource was not found.",
+        405: "The requested method is not allowed.",
+        409: "The request conflicts with the current state.",
+        429: "Too many requests. Try again later.",
+    }
+    message = messages.get(exc.status_code, "The request could not be completed.")
+    return JSONResponse(_envelope(request, code, message), exc.status_code)
 
 
 async def _validation_error_handler(request: Request, exc: RequestValidationError) -> JSONResponse:
@@ -58,7 +68,9 @@ async def _validation_error_handler(request: Request, exc: RequestValidationErro
 
 
 async def _unhandled_handler(request: Request, exc: Exception) -> JSONResponse:
-    log.exception("unhandled error")
+    # Do not serialize exception text or tracebacks: provider/database errors
+    # can contain submitted values, URLs, or connection details.
+    log.error("unhandled error type=%s", type(exc).__name__)
     return JSONResponse(_envelope(request, "INTERNAL_ERROR", "An unexpected error occurred."), 500)
 
 

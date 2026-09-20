@@ -2,6 +2,7 @@
 import io
 import sys
 import uuid
+from copy import deepcopy
 from pathlib import Path
 
 import pytest
@@ -13,8 +14,9 @@ if str(ROOT) not in sys.path:
 
 from ai.ocr.base import OcrLine, OcrPage  # noqa: E402
 from ai.validation import demo_reference  # noqa: E402
-from app.ai.errors import ProviderRateLimitError  # noqa: E402
+from app.ai.errors import ProviderBadResponseError, ProviderRateLimitError  # noqa: E402
 from app.ai.types import ExtractionResult, FieldResult  # noqa: E402
+from app.errors import AppError  # noqa: E402
 from app.main import app  # noqa: E402
 from app.processing import pipeline as pipeline_module  # noqa: E402
 from app.processing.pipeline import PipelineDeps, run_pipeline  # noqa: E402
@@ -111,6 +113,18 @@ class FakeDocs:
         self.doc["processing_status"] = status
         return self.doc
 
+    def mark_failed_if_processing(self, document_id):
+        if self.doc["id"] != document_id or self.doc["processing_status"] != "PROCESSING":
+            return False
+        self.doc["processing_status"] = "FAILED"
+        return True
+
+    def release_processing_claim(self, document_id, previous_status):
+        if self.doc["id"] != document_id or self.doc["processing_status"] != "PROCESSING":
+            return False
+        self.doc["processing_status"] = previous_status
+        return True
+
     def claim_for_processing(self, document_id):
         # Mirrors `UPDATE ... WHERE id = ? AND processing_status <> 'PROCESSING'`:
         # only the first caller observes a non-PROCESSING row and wins.
@@ -123,11 +137,18 @@ class FakeDocs:
 class FakeJobs:
     def __init__(self):
         self.jobs = {}
+        self.documents = None
+        self.fail_create = False
+        self.persist_before_failure = False
 
     def create_job(self, row):
+        if self.fail_create and not self.persist_before_failure:
+            raise self.fail_create
         saved = {"id": str(uuid.uuid4()), "started_at": None, "completed_at": None,
                  "error_code": None, "error_message": None, **row}
         self.jobs[saved["id"]] = saved
+        if self.fail_create:
+            raise self.fail_create
         return saved
 
     def get_job(self, job_id):
@@ -145,6 +166,8 @@ class FakeJobs:
         for job in self.jobs.values():
             if job["status"] in ("PENDING", "RUNNING"):
                 job.update({"status": "FAILED", "error_code": "SERVER_RESTARTED"})
+                if self.documents is not None and self.documents.doc["processing_status"] == "PROCESSING":
+                    self.documents.doc["processing_status"] = "FAILED"
                 count += 1
         return count
 
@@ -155,6 +178,13 @@ class FakeRecords:
         self.extracted = {}
         self.validations = {}
         self.ocr_by_doc = {}
+        self.atomic_fail_stage = None
+        self._processing_context = None
+
+    def bind_processing_context(self, *, jobs, documents, reviews, audits):
+        self._processing_context = {
+            "jobs": jobs, "documents": documents, "reviews": reviews, "audits": audits,
+        }
 
     def get_record(self, record_id):
         return self.records.get(record_id)
@@ -200,6 +230,95 @@ class FakeRecords:
     def list_reference_rows(self):
         return []
 
+    def persist_processing_result(self, **payload):
+        """Test double for the PostgreSQL RPC, including rollback semantics."""
+        ctx = self._processing_context
+        assert ctx is not None, "processing persistence context was not bound"
+        jobs, documents = ctx["jobs"], ctx["documents"]
+        reviews, audits = ctx["reviews"], ctx["audits"]
+        snapshot = {
+            "records": deepcopy(self.records), "extracted": deepcopy(self.extracted),
+            "validations": deepcopy(self.validations), "ocr_by_doc": deepcopy(self.ocr_by_doc),
+            "jobs": deepcopy(jobs.jobs), "document": deepcopy(documents.doc),
+            "tasks": deepcopy(reviews.tasks), "audits": deepcopy(audits.entries),
+        }
+        try:
+            stage = self.atomic_fail_stage
+            if stage == "ocr":
+                raise RuntimeError("injected OCR persistence failure")
+            doc_id = payload["p_document_id"]
+            self.ocr_by_doc[doc_id] = [
+                {"document_id": doc_id, **row} for row in payload["p_ocr_results"]
+            ]
+            if stage == "record":
+                raise RuntimeError("injected record persistence failure")
+            existing = self.get_record_by_document(doc_id)
+            if existing is None:
+                record = self.create_record({"document_id": doc_id, **payload["p_record"]})
+            else:
+                record = self.update_record(existing["id"], payload["p_record"])
+            record_id = record["id"]
+            if stage == "fields":
+                raise RuntimeError("injected extracted-field persistence failure")
+            self.replace_extracted_fields(
+                record_id, [{"land_record_id": record_id, **row}
+                            for row in payload["p_extracted_fields"]]
+            )
+            if stage == "validation":
+                raise RuntimeError("injected validation persistence failure")
+            self.replace_validation_results(
+                record_id, [{"land_record_id": record_id, **row}
+                            for row in payload["p_validation_results"]]
+            )
+            documents.update_status(doc_id, payload["p_document_status"])
+            review_id = None
+            review_created = None
+            if payload["p_verdict"] != "READY_FOR_APPROVAL":
+                open_tasks = reviews.open_tasks_for_record(record_id)
+                if open_tasks:
+                    review_id = open_tasks[0]["id"]
+                else:
+                    task = reviews.create_task({
+                        "land_record_id": record_id, "status": "PENDING",
+                        "priority": payload["p_review_priority"],
+                        "reason": payload["p_review_reason"],
+                    })
+                    review_id = task["id"]
+                    review_created = review_id
+                    audits.append({
+                        "user_id": payload["p_user_id"], "entity_type": "land_record",
+                        "entity_id": record_id, "action": "REVIEW_CREATED",
+                        "metadata": {"review_id": review_id,
+                                     "priority": payload["p_review_priority"],
+                                     "reason": payload["p_review_reason"]},
+                    })
+            jobs.update_job(payload["p_job_id"], {
+                "status": "SUCCEEDED", "completed_at": NOW,
+                "error_code": None, "error_message": None,
+            })
+            if stage == "audit":
+                raise RuntimeError("injected completion-audit persistence failure")
+            metadata = {
+                **payload["p_completion_metadata"], "record_id": record_id,
+                "review_created": review_created,
+            }
+            audits.append({
+                "user_id": payload["p_user_id"], "entity_type": "document",
+                "entity_id": doc_id, "action": "PROCESSING_COMPLETED",
+                "metadata": metadata,
+            })
+            return {"record_id": record_id, "review_id": review_id, "replayed": False}
+        except Exception:
+            self.records = snapshot["records"]
+            self.extracted = snapshot["extracted"]
+            self.validations = snapshot["validations"]
+            self.ocr_by_doc = snapshot["ocr_by_doc"]
+            jobs.jobs = snapshot["jobs"]
+            documents.doc = snapshot["document"]
+            reviews.tasks = snapshot["tasks"]
+            audits.entries = snapshot["audits"]
+            raise
+
 
 class FakeReviews:
     def __init__(self):
@@ -240,7 +359,9 @@ class FakeAudits:
 
 @pytest.fixture()
 def world():
-    return {"docs": FakeDocs(), "jobs": FakeJobs(), "records": FakeRecords(),
+    docs, jobs = FakeDocs(), FakeJobs()
+    jobs.documents = docs
+    return {"docs": docs, "jobs": jobs, "records": FakeRecords(),
             "reviews": FakeReviews(), "audits": FakeAudits()}
 
 
@@ -290,11 +411,57 @@ def test_pipeline_ocr_failure_marks_failed(world):
     assert job["status"] == "FAILED" and job["error_code"] == "OCR_FAILED"
     assert world["docs"].doc["processing_status"] == "FAILED"
     assert world["records"].records == {}
+    assert world["records"].ocr_by_doc == {}
+    assert world["records"].extracted == {}
+    assert world["records"].validations == {}
+    assert world["reviews"].tasks == {}
+    assert not [e for e in world["audits"].entries if e["action"] == "PROCESSING_COMPLETED"]
+
+
+@pytest.mark.parametrize("stage", ["ocr", "record", "fields", "validation", "audit"])
+def test_atomic_result_failure_leaves_no_partial_business_data(world, stage):
+    """Every final-persistence failure rolls back the complete result unit."""
+    world["records"].atomic_fail_stage = stage
+    job = _run(world)
+
+    assert job["status"] == "FAILED"
+    assert world["docs"].doc["processing_status"] == "FAILED"
+    assert world["records"].records == {}
+    assert world["records"].ocr_by_doc == {}
+    assert world["records"].extracted == {}
+    assert world["records"].validations == {}
+    assert world["reviews"].tasks == {}
+    assert not [e for e in world["audits"].entries if e["action"] == "PROCESSING_COMPLETED"]
+
+
+def test_failed_atomic_result_can_be_retried_without_duplicate_children(world):
+    world["records"].atomic_fail_stage = "fields"
+    failed = _run(world)
+    assert failed["status"] == "FAILED"
+    assert world["records"].records == {}
+
+    world["records"].atomic_fail_stage = None
+    succeeded = _run(world)
+    assert succeeded["status"] == "SUCCEEDED"
+    record = world["records"].get_record_by_document(DOC_ID)
+    assert record is not None
+    assert len(world["records"].ocr_by_doc[DOC_ID]) == 1
+    assert len(world["records"].extracted[record["id"]]) == 14
+    assert len(world["records"].validations[record["id"]]) == 0
 
 
 def test_pipeline_provider_failure_classified(world):
     job = _run(world, ai_error=ProviderRateLimitError("stub", "slow down"))
     assert job["status"] == "FAILED" and job["error_code"] == "PROVIDER_RATE_LIMITED"
+
+
+def test_pipeline_malformed_provider_response_is_diagnosable_and_persisted_atomically(world):
+    job = _run(world, ai_error=ProviderBadResponseError("stub", "malformed response"))
+    assert job["status"] == "FAILED" and job["error_code"] == "PROVIDER_BAD_RESPONSE"
+    assert world["docs"].doc["processing_status"] == "FAILED"
+    assert world["records"].records == {}
+    assert world["records"].extracted == {}
+    assert world["records"].validations == {}
 
 
 def test_pipeline_storage_failure(world):
@@ -368,6 +535,64 @@ def test_process_endpoint_accepts_and_runs_background(client, world, monkeypatch
         app.dependency_overrides.clear()
 
 
+def test_job_creation_failure_releases_document_claim(client, world):
+    docs, jobs = world["docs"], world["jobs"]
+    jobs.fail_create = AppError(503, "DATABASE_UNAVAILABLE", "Processing job store is temporarily unavailable.")
+    app.dependency_overrides[get_document_store] = lambda: docs
+    app.dependency_overrides[get_job_store] = lambda: jobs
+    app.dependency_overrides[get_pipeline_runner] = lambda: (lambda *a, **k: None)
+    try:
+        headers = {"Authorization": f"Bearer {_token(client)}"}
+        response = client.post(f"/api/v1/documents/{DOC_ID}/process", headers=headers)
+        assert response.status_code == 503
+        assert docs.doc["processing_status"] == "UPLOADED"
+        assert jobs.list_jobs_for_document(DOC_ID) == []
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_ambiguous_job_insert_keeps_claim_to_prevent_duplicate_retry(client, world):
+    docs, jobs = world["docs"], world["jobs"]
+    jobs.fail_create = AppError(503, "DATABASE_UNAVAILABLE", "Processing job store is temporarily unavailable.")
+    jobs.persist_before_failure = True
+    app.dependency_overrides[get_document_store] = lambda: docs
+    app.dependency_overrides[get_job_store] = lambda: jobs
+    app.dependency_overrides[get_pipeline_runner] = lambda: (lambda *a, **k: None)
+    try:
+        headers = {"Authorization": f"Bearer {_token(client)}"}
+        response = client.post(f"/api/v1/documents/{DOC_ID}/process", headers=headers)
+        assert response.status_code == 503
+        assert docs.doc["processing_status"] == "PROCESSING"
+        assert len(jobs.list_jobs_for_document(DOC_ID)) == 1
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_status_reports_latest_job_diagnostics_without_changing_document_state(client, world):
+    docs, jobs = world["docs"], world["jobs"]
+    docs.doc["processing_status"] = "FAILED"
+    job = jobs.create_job({"document_id": DOC_ID, "status": "FAILED",
+                           "pipeline_version": "v1", "error_code": "OCR_FAILED",
+                           "started_at": NOW, "completed_at": NOW})
+    app.dependency_overrides[get_document_store] = lambda: docs
+    app.dependency_overrides[get_job_store] = lambda: jobs
+    try:
+        headers = {"Authorization": f"Bearer {_token(client)}"}
+        response = client.get(f"/api/v1/documents/{DOC_ID}/status", headers=headers)
+        assert response.status_code == 200
+        assert response.json() == {
+            "document_id": DOC_ID,
+            "status": "FAILED",
+            "job_id": job["id"],
+            "job_status": "FAILED",
+            "error_code": "OCR_FAILED",
+            "started_at": "2026-09-04T00:00:00Z",
+            "completed_at": "2026-09-04T00:00:00Z",
+        }
+    finally:
+        app.dependency_overrides.clear()
+
+
 def test_process_endpoint_guards(client, world):
     app.dependency_overrides[get_document_store] = lambda: world["docs"]
     app.dependency_overrides[get_job_store] = lambda: world["jobs"]
@@ -422,7 +647,8 @@ def test_processing_completed_audit_carries_versions(world):
 
 
 def test_mark_stale_failed_reconciles(world):
-    jobs = world["jobs"]
+    docs, jobs = world["docs"], world["jobs"]
+    docs.doc["processing_status"] = "PROCESSING"
     running = jobs.create_job({"document_id": DOC_ID, "status": "RUNNING", "pipeline_version": "v1"})
     pending = jobs.create_job({"document_id": DOC_ID, "status": "PENDING", "pipeline_version": "v1"})
     done = jobs.create_job({"document_id": DOC_ID, "status": "SUCCEEDED", "pipeline_version": "v1"})
@@ -431,3 +657,4 @@ def test_mark_stale_failed_reconciles(world):
     assert jobs.get_job(running["id"])["error_code"] == "SERVER_RESTARTED"
     assert jobs.get_job(pending["id"])["status"] == "FAILED"
     assert jobs.get_job(done["id"])["status"] == "SUCCEEDED"
+    assert docs.doc["processing_status"] == "FAILED"

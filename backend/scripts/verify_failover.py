@@ -90,8 +90,8 @@ def main() -> int:
     print("gemini mock invocations (no network):", len(GEMINI_NETWORK_CALLS))
     print("attempted_routes:", first.attempted_routes)
     print("served by:", first.provider, "/", first.model)
-    print("owner_name:", repr(first.fields["owner_name"].value),
-          "survey_number:", repr(first.fields["survey_number"].value))
+    print("field checks:", "owner_name", first.fields["owner_name"].extraction_status,
+          "survey_number", first.fields["survey_number"].extraction_status)
     print("cache_hit:", first.cache_hit)
     if first.provider != "openrouter":
         print("FAILOVER FAILED: fallback lane did not serve")

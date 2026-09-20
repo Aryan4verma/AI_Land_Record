@@ -15,7 +15,7 @@ class ProviderError(Exception):
         super().__init__(message)
         self.provider = provider
         self.message = message
-        # Optional diagnostic facts (status codes, paths, redacted bodies).
+        # Optional diagnostic facts (status codes, paths, and exception type).
         # NEVER put credentials, URLs with query strings, headers, or tokens here.
         self.details = details or {}
 

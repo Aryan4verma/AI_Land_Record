@@ -8,6 +8,7 @@ import pytest
 from app.documents import validation as v
 from app.documents.storage_backend import get_storage_backend
 from app.documents.store import get_document_store
+from app.processing.stores import get_job_store
 from app.errors import AppError
 from app.main import app
 from tests.conftest import OP_ID
@@ -55,11 +56,17 @@ class FakeStorage:
         self.objects.pop(path, None)
 
 
+class FakeJobs:
+    def list_jobs_for_document(self, document_id):
+        return []
+
+
 @pytest.fixture()
 def fakes():
-    store, storage = FakeStore(), FakeStorage()
+    store, storage, jobs = FakeStore(), FakeStorage(), FakeJobs()
     app.dependency_overrides[get_document_store] = lambda: store
     app.dependency_overrides[get_storage_backend] = lambda: storage
+    app.dependency_overrides[get_job_store] = lambda: jobs
     yield store, storage
 
 

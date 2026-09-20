@@ -1,5 +1,11 @@
-"""Error-envelope contract: every failure uses the standard shape and
-validation errors never echo submitted values."""
+"""Error-envelope contract and leakage protections."""
+
+import asyncio
+
+from starlette.requests import Request
+from starlette.exceptions import HTTPException as StarletteHTTPException
+
+from app.errors import _http_error_handler, _unhandled_handler
 
 
 def test_unknown_route_uses_envelope(client):
@@ -16,3 +22,21 @@ def test_login_validation_error_never_echoes_password(client):
     body = response.json()
     assert body["error"]["code"] == "VALIDATION_ERROR"
     assert "secret" not in body["error"]["message"].lower()
+
+
+def _request():
+    return Request({"type": "http", "method": "GET", "path": "/test", "headers": []})
+
+
+def test_framework_http_error_detail_is_not_returned(client):
+    response = asyncio.run(_http_error_handler(_request(), StarletteHTTPException(400, detail="secret-value")))
+    assert response.body and b"secret-value" not in response.body
+
+
+def test_unhandled_error_does_not_leak_exception_text_or_traceback(caplog):
+    secret = "document-sensitive-value"
+    with caplog.at_level("ERROR"):
+        response = asyncio.run(_unhandled_handler(_request(), RuntimeError(secret)))
+    assert secret not in response.body.decode()
+    assert secret not in caplog.text
+    assert b"INTERNAL_ERROR" in response.body

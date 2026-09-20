@@ -26,6 +26,15 @@ class ReviewOut(BaseModel):
     completed_at: datetime | None = None
 
 
+class ReviewPageOut(BaseModel):
+    """Opt-in paginated review response; the legacy list remains supported."""
+
+    items: list[ReviewOut]
+    limit: int
+    offset: int
+    total: int
+
+
 class CorrectionIn(BaseModel):
     value: str | None = Field(default=None, max_length=2000)
     reason: str = Field(min_length=1, max_length=500)
@@ -59,3 +68,12 @@ class AuditOut(BaseModel):
     new_value: object | None = None
     metadata: dict = {}
     timestamp: datetime
+
+
+class AuditPageOut(BaseModel):
+    """Opt-in paginated audit response; the legacy list remains supported."""
+
+    items: list[AuditOut]
+    limit: int
+    offset: int
+    total: int

@@ -2,6 +2,7 @@
 from functools import lru_cache
 from pathlib import Path
 
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -26,12 +27,12 @@ class Settings(BaseSettings):
     supabase_service_role_key: str = ""
 
     auth_secret: str = ""
-    auth_token_expire_minutes: int = 480
+    auth_token_expire_minutes: int = Field(default=480, ge=5, le=1440)
 
     frontend_origins: str = "http://localhost:5173"
 
     storage_bucket: str = "land-record-documents"
-    max_upload_mb: int = 10
+    max_upload_mb: int = Field(default=10, ge=1, le=100)
 
     ai_provider: str = "gemini"
     ai_model: str = "gemini-2.0-flash"
@@ -46,14 +47,22 @@ class Settings(BaseSettings):
     ai_cache_max_entries: int = 256
 
     # Login abuse protection: failed attempts per (client, email) window.
-    login_max_attempts: int = 10
-    login_window_seconds: int = 300
+    login_max_attempts: int = Field(default=10, ge=1, le=100)
+    login_window_seconds: int = Field(default=300, ge=10, le=86400)
 
     # Demo Mode: a controlled demonstration path for known documents that
     # replays precomputed OCR/extraction instead of calling an external
     # provider. Server-side switch — the frontend cannot enable it.
     demo_mode: bool = False
     demo_fixture_directory: str = ""  # blank -> <repo>/demo/fixtures
+
+    @field_validator("frontend_origins")
+    @classmethod
+    def reject_wildcard_origins(cls, value: str) -> str:
+        origins = [item.strip() for item in value.split(",") if item.strip()]
+        if "*" in origins:
+            raise ValueError("FRONTEND_ORIGINS must contain explicit origins, not '*'.")
+        return value
 
     @property
     def supabase_configured(self) -> bool:

@@ -4,7 +4,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, Query, Request
 
 from ..auth.dependencies import get_current_user, require_role
-from ..reviews.stores import RecordStore, get_record_store
+from ..reviews.stores import AuditStore, RecordStore, get_audit_store, get_record_store
 from .schemas import (
     DashboardProcessingOut,
     DashboardSummaryOut,
@@ -104,6 +104,7 @@ def mock_lrms(
     request: Request,
     user: dict = Depends(require_role("operator")),
     records: RecordStore = Depends(get_record_store),
+    audits: AuditStore = Depends(get_audit_store),
 ) -> dict:
     _ = (request, user)
-    return mock_lrms_submit(str(body.record_id), records)
+    return mock_lrms_submit(str(body.record_id), records, audits, user_id=str(user["id"]))

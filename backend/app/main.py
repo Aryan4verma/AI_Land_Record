@@ -23,13 +23,20 @@ from .routers.health import router as health_router
 
 log = get_logger(__name__)
 
+_MIN_AUTH_SECRET_LENGTH = 32
+
+
+def validate_auth_secret(secret: str) -> None:
+    """Fail closed when the deployment supplies a weak/default JWT secret."""
+    normalized = (secret or "").strip()
+    if len(normalized) < _MIN_AUTH_SECRET_LENGTH or normalized.lower() in {"changeme", "change-me", "test"}:
+        raise RuntimeError("AUTH_SECRET must be a random value of at least 32 characters.")
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     settings = get_settings()
-    secret = (settings.auth_secret or "").strip()
-    if not secret or secret.lower() in {"changeme", "change-me", "test"}:
-        raise RuntimeError("AUTH_SECRET is not set. Copy .env.example to .env and set a strong random value.")
+    validate_auth_secret(settings.auth_secret)
     app.state.supabase = init_supabase()
     if app.state.supabase is not None:
         from .processing.stores import SupabaseJobStore
@@ -59,9 +66,11 @@ def create_app() -> FastAPI:
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.frontend_origin_list,
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
+        allow_credentials=False,
+        allow_methods=["GET", "POST", "PATCH", "OPTIONS"],
+        allow_headers=["Accept", "Authorization", "Content-Type"],
+        expose_headers=["X-Request-ID"],
+        max_age=600,
     )
     install_error_handlers(app)
     app.include_router(health_router)

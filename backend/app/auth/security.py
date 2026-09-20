@@ -28,6 +28,8 @@ def verify_password(password: str, hashed: str) -> bool:
 
 
 def create_access_token(*, user_id: str, role: str, secret: str, expires_minutes: int) -> str:
+    if not secret or expires_minutes <= 0:
+        raise ValueError("Token signing requires a non-empty secret and positive expiry.")
     now = int(time.time())
     payload = {"sub": user_id, "role": role, "iat": now, "exp": now + expires_minutes * 60}
     return jwt.encode(payload, secret, algorithm=_ALGORITHM)
@@ -35,7 +37,12 @@ def create_access_token(*, user_id: str, role: str, secret: str, expires_minutes
 
 def decode_access_token(token: str, secret: str) -> dict:
     try:
-        return jwt.decode(token, secret, algorithms=[_ALGORITHM], options={"require": ["sub", "role", "exp"]})
+        return jwt.decode(
+            token,
+            secret,
+            algorithms=[_ALGORITHM],
+            options={"require": ["sub", "role", "iat", "exp"]},
+        )
     except jwt.ExpiredSignatureError as exc:
         raise AppError(401, "TOKEN_EXPIRED", "Session has expired. Please log in again.") from exc
     except jwt.InvalidTokenError as exc:

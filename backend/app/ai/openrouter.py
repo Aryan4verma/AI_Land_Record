@@ -59,18 +59,14 @@ class OpenRouterAdapter:
         return [self._model, *self._fallback_models]
 
     def _diagnostic(self, response: httpx.Response | None, code_path: str, exc: Exception | None = None) -> dict:
-        endpoint, status, body = "unknown", None, ""
+        endpoint, status = "unknown", None
         if response is not None:
             url = response.request.url
             endpoint = f"{url.scheme}://{url.host}{url.path}"
             status = response.status_code
-            try:
-                body = response.text[:500]
-            except Exception:
-                body = ""
         return {
             "http_status": status, "endpoint": endpoint, "model": self._model,
-            "key_configured": bool(self._api_key), "body": body,
+            "key_configured": bool(self._api_key),
             "exception": type(exc).__name__ if exc is not None else None, "code_path": code_path,
         }
 

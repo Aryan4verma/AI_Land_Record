@@ -1,7 +1,8 @@
 """One controlled live request to the configured AI provider (STEP 06 check).
 
-Reads credentials from backend `.env` / environment only. Prints extracted
-field values + confidences and provider metadata. NEVER prints any key.
+Reads credentials from backend `.env` / environment only. Prints field names,
+confidences, and provider metadata. It never prints document-derived values or
+any key.
 
 Usage (from backend/):
     .\\.venv\\Scripts\\python scripts\\smoke_gemini.py
@@ -48,12 +49,12 @@ def main() -> int:
         )
     except ProviderError as exc:
         print(f"provider error: {exc.code}: {exc.message}")
-        for key in ("http_status", "endpoint", "model", "key_configured", "body", "exception", "code_path"):
+        for key in ("http_status", "endpoint", "model", "key_configured", "exception", "code_path"):
             print(f"  {key}={exc.details.get(key)}")
         return 1
     for name in KNOWN_FIELDS:
         item = result.fields[name]
-        print(f"{name:<22} value={item.value!r} conf={item.confidence} status={item.extraction_status}")
+        print(f"{name:<22} conf={item.confidence} status={item.extraction_status}")
     print(
         f"provider={result.provider} model={result.model} "
         f"prompt={result.prompt_version} schema={result.schema_version} "

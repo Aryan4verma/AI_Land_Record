@@ -150,7 +150,7 @@ def test_catch_all_carries_redacted_diagnostics():
     assert details["key_configured"] is True
     assert "key=" not in details["endpoint"]
     assert details["endpoint"].endswith(":generateContent")
-    assert "NOT_FOUND" in details["body"]
+    assert "body" not in details
     assert "catch-all" in details["code_path"]
 
 

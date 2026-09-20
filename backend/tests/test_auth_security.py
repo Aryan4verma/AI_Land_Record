@@ -51,6 +51,41 @@ def test_tampered_token_rejected():
         decode_access_token(token + "tampered", SECRET)
 
 
+def test_token_without_iat_is_rejected():
+    payload = {"sub": "u1", "role": "operator", "exp": int(time.time()) + 60}
+    token = jwt.encode(payload, SECRET, algorithm="HS256")
+    with pytest.raises(AppError) as exc_info:
+        decode_access_token(token, SECRET)
+    assert exc_info.value.code == "INVALID_TOKEN"
+
+
+def test_token_creation_rejects_empty_secret_or_nonpositive_expiry():
+    with pytest.raises(ValueError):
+        create_access_token(user_id="u1", role="operator", secret="", expires_minutes=60)
+    with pytest.raises(ValueError):
+        create_access_token(user_id="u1", role="operator", secret=SECRET, expires_minutes=0)
+
+
+def test_startup_secret_validation_rejects_weak_values():
+    from app.main import validate_auth_secret
+
+    with pytest.raises(RuntimeError):
+        validate_auth_secret("too-short")
+    with pytest.raises(RuntimeError):
+        validate_auth_secret("change-me")
+    validate_auth_secret(SECRET)
+
+
+def test_login_rate_limiter_bounds_distinct_attack_keys():
+    from app.auth.rate_limit import LoginRateLimiter
+
+    limiter = LoginRateLimiter(max_attempts=2, window_seconds=300, max_keys=2)
+    limiter.record_failure("first")
+    limiter.record_failure("second")
+    limiter.record_failure("third")
+    assert len(limiter._hits) == 2
+
+
 class _StubStore:
     """Stands in for the user store require_role now consults."""
 
