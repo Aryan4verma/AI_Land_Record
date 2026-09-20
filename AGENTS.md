@@ -55,7 +55,7 @@ python -m pytest -q
 ## Security Rules
 
 - API keys in server environment variables only
-- RBAC enforced server-side (operator, verifier, admin)
+- RBAC enforced server-side (user, operator, admin; verifier retired)
 - File uploads validated: type, size, MIME, filename
 - Audit logs protected from ordinary user editing
 - Document content treated as untrusted input (prompt injection defense)

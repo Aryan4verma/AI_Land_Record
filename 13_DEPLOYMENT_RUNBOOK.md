@@ -75,7 +75,10 @@ ENVIRONMENT / FRONTEND_ORIGINS / LOG_LEVEL
 DEMO_MODE (flag only — Demo Mode behavior is NOT implemented, see §14)
 ```
 
-Actual values must never be committed.
+Actual values must never be committed. The ignored local `opencode.json` may
+reference `STITCH_API_KEY` only through `{env:STITCH_API_KEY}`; set that
+variable in the shell or secret manager, never in the JSON file. The checked-in
+`opencode.example.json` is the safe template.
 
 Local files: root `.env.example` is the template; `backend/.env` is the
 live local file (the app also accepts `./.env` from the working directory).
@@ -129,9 +132,15 @@ Supabase hosted — no local database to create.
 Apply migrations in order via Supabase SQL editor/MCP (files in supabase/migrations/):
   land_records_foundation → land_records_foundation_fixes → storage_documents_bucket
   → add_users_id_number → two_role_architecture
+  → atomic_processing_persistence → processing_lifecycle_hardening
 Seeded automatically: roles (user/operator/admin) + DEMO reference chain.
 Private bucket land-record-documents is created by the storage migration
 (10 MB limit, PDF/PNG/JPEG/TIFF).
+
+The two processing migrations must be applied before deploying workers that
+call the PostgreSQL persistence/reconciliation functions. Startup reconciliation
+then marks pre-restart PENDING/RUNNING jobs failed and releases their matching
+PROCESSING documents for explicit retry.
 
 ## Seeding Users
 
@@ -228,6 +237,7 @@ Database
 All tests pass
 Environment variables configured
 Secrets not committed
+`python scripts/scan_secrets.py` passes
 Database migration complete
 OCR tested
 LLM tested

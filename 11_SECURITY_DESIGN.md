@@ -60,11 +60,11 @@ Rules:
 * The retired `verifier` value is not in the hierarchy: a token or stored row
   carrying it fails closed (401) rather than being reinterpreted.
 
-KNOWN LIMITATION: authorization reads the role from the verified JWT and does
-not re-check the database on every request (only `/auth/me` refetches). A
-demotion or deactivation therefore takes effect at token expiry
-(`AUTH_TOKEN_EXPIRE_MINUTES`, default 480) rather than immediately. Rotate
-`AUTH_SECRET` to invalidate all outstanding tokens at once.
+The backend re-reads the active user and canonical role from the database on
+every authenticated request. Demotion, suspension, or deletion therefore
+takes effect immediately rather than waiting for token expiry. Logout remains
+stateless: the client discards its bearer token; rotate `AUTH_SECRET` or
+deactivate the account when outstanding tokens must be invalidated globally.
 
 ---
 
@@ -80,7 +80,9 @@ Git repository
 logs
 ```
 
-Store them in secure backend environment/secret management.
+Store them in secure backend environment/secret management. OpenCode MCP
+credentials use `{env:STITCH_API_KEY}` and are never stored in `opencode.json`
+or any tracked file.
 
 ---
 
@@ -92,7 +94,7 @@ Validate:
 * MIME type
 * size
 * filename
-* content where practical
+* magic bytes/content where practical
 
 Use generated internal storage names rather than trusting user filenames.
 
@@ -110,6 +112,10 @@ Use:
 * encrypted transport
 * backups
 * proper indexes and constraints
+
+The backend CORS policy uses explicit configured origins and only the methods
+and headers used by the current browser client. Wildcard origins, methods, and
+headers are not permitted.
 
 Do not expose database credentials to frontend code.
 
@@ -207,6 +213,15 @@ security events
 Do not log raw secrets.
 
 Avoid unnecessary sensitive document content in logs.
+
+Database/provider diagnostics log operation, type, and status facts only;
+driver messages, provider response bodies, passwords, tokens, URLs with
+credentials, and document-derived values are not logged. Run the repository
+secret scan with:
+
+```text
+python scripts/scan_secrets.py
+```
 
 ---
 

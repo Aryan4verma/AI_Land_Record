@@ -26,7 +26,7 @@ export interface User {
   id_number?: string | null;
 }
 
-/** POST /api/v1/auth/register — self-registration (no role; server assigns operator) */
+/** POST /api/v1/auth/register — self-registration (no role; server assigns read-only user) */
 export interface RegisterRequest {
   name: string;
   id_number: string;
@@ -72,6 +72,11 @@ export interface Document {
 export interface DocumentStatus {
   document_id: string;
   status: string;
+  job_id?: string | null;
+  job_status?: string | null;
+  error_code?: string | null;
+  started_at?: string | null;
+  completed_at?: string | null;
 }
 
 /** One row of extracted_fields — GET .../extraction */

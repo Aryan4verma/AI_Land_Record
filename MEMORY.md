@@ -1666,4 +1666,179 @@ build at :4173, which the backend CORS allow-list correctly rejects
 still card-heavy (the .section/.fieldgrid primitives exist but are unadopted
 there).
 
+## Decision 2026-09-20 — Security and configuration hardening
+
+```text
+Completed a scoped security pass without redesigning the application:
+removed the local OpenCode Google credential and replaced it with
+{env:STITCH_API_KEY}; added a safe opencode.example.json and repository secret
+scanner; enforced explicit CORS methods/headers and rejected wildcard origins;
+required strong AUTH_SECRET configuration and iat/exp JWT claims; active user
+and role state is re-read on every authenticated request; bounded the
+in-process login limiter; removed raw database/provider error bodies and
+tracebacks from logs; and added focused regression tests.
+
+Logout remains intentionally stateless: the client discards its bearer token;
+global invalidation requires AUTH_SECRET rotation or account deactivation.
+The external Google credential still requires owner-controlled revocation or
+rotation; no revocation is claimed here.
+```
+
+## Decision 2026-09-20 — PostgreSQL/Supabase audit
+
+```text
+Live read-only verification through the configured Supabase project confirmed
+the 12 expected public tables, current user/operator/admin role vocabulary,
+the expected live columns and foreign-key relationships, private storage bucket
+configuration, and deny-by-default behavior for unauthenticated table/storage
+access. Data checks found no relational or timestamp or lifecycle mismatches.
+
+Three duplicate document-checksum groups and four unreferenced storage objects
+(188 bytes total) remain as cleanup candidates; no production data or objects
+were deleted. The generated supabase/database.types.ts was missing the live
+users.id_number column and was corrected. No new database migration was
+needed: existing constraints, RLS posture, storage configuration, and indexes
+were retained pending catalog-level SQL/EXPLAIN access through the unavailable
+Supabase SQL MCP surface.
+```
+
+## Decision 2026-09-20 — Atomic processing persistence
+
+```text
+The pipeline's final result persistence now uses the new PostgreSQL function
+persist_processing_result() from migration
+20260920140000_atomic_processing_persistence.sql. OCR rows, land record,
+extracted fields, validation results, final document status, review creation,
+job success, and completion audit are one database transaction. OCR/AI work and
+initial RUNNING/PROCESSING state remain outside the transaction intentionally.
+
+The function is SECURITY INVOKER with pinned search_path, typed scalar inputs,
+typed JSONB conversion, no dynamic SQL, and service_role-only execution. It is
+retry-safe, reuses open reviews, protects terminal records, and returns an
+idempotent result for repeated completion of an already-successful job.
+Failure reconciliation only marks a document FAILED while it is still
+PROCESSING, so a late duplicate worker cannot overwrite a successful result.
+The migration must be applied before deploying the updated backend; hosted RPC
+execution was not claimed because the task surface did not expose SQL migration
+execution.
+```
+
+## Decision 2026-09-21 — Processing lifecycle reliability
+
+```text
+The process acceptance boundary now claims a document atomically before job
+creation and releases that claim if job creation fails. Demo fixture resolution
+also happens before claiming, so rejected demo inputs cannot strand a document
+in PROCESSING.
+
+Restart reconciliation moved to the PostgreSQL function
+reconcile_stale_processing_jobs() from migration
+20260921100000_processing_lifecycle_hardening.sql. It marks stale PENDING/
+RUNNING jobs FAILED and releases matching PROCESSING documents in one
+transaction. The function is service_role-only, SECURITY INVOKER, and has a
+pinned search_path.
+
+GET /documents/{id}/status remains backward-compatible while exposing the
+latest job id/status, safe error code, and timestamps when present. The
+document processing status remains distinct from land_records approval status:
+approval/rejection is authoritative on the record, while the document status
+describes ingestion/processing completion. No fabricated per-stage telemetry
+was added because the pipeline does not persist those sub-stages.
+The new migration must be applied before deploying the updated backend; live
+SQL execution was not claimed because the connected Supabase surface was
+read-only for migration execution.
+```
+
+## Decision 2026-09-21 — Authenticated document source pages
+
+```text
+Added GET /api/v1/documents/{document_id}/pages/{page_number}. It uses the
+existing private storage backend and server-side read authorization, validates
+the generated storage-path shape, downloads source bytes without exposing the
+path, and renders only the requested page through the existing PyMuPDF helper.
+The response is a private no-store JPEG with safe error envelopes and a render
+pixel cap.
+
+The existing extraction schema's nullable source_page/source_text/bounding_box
+fields are now represented explicitly in the document extraction response.
+They remain null when the provider did not supply real grounding evidence;
+coordinates are never invented. No frontend or database migration was added.
+Live authenticated storage smoke verification remains a deployment step.
+```
+
+## Decision 2026-09-21 — Review and audit API hardening
+
+```text
+The review queue audit found server-side status/assignment filtering, but
+priority, free-text search, assignee shortcuts, and sorting were still
+client-side; pagination was absent. The backend now applies priority filtering
+and supports opt-in limit/offset pagination with {items,total,limit,offset}.
+Calls without those new parameters retain the existing array response, so the
+current frontend remains compatible.
+
+Per-record audit history received the same opt-in pagination contract and a
+stable timestamp/id ordering. The endpoint remains operator-only and audit
+rows remain append-only through the application and database permissions. A
+global audit feed was not added because the current product explicitly uses
+record-scoped timelines and has no workspace-wide audit consumer.
+
+Review correctness remains server-enforced: operator-only actions, mandatory
+correction reasons with validation reruns, terminal-record immutability,
+authoritative approval blockers, and duplicate-action rejection. Successful
+mock-LRMS dispatches now append MOCK_LRMS_DISPATCHED without auditing rejected
+or unauthorized attempts. Existing review tests cover correction, terminal,
+approval, rejection, and authorization behavior; new tests cover queue/audit
+pagination and dispatch auditing.
+```
+
+## Decision 2026-09-21 — Backend API contract audit
+
+```text
+Compared the FastAPI routes, Pydantic schemas, frontend client, and
+10_API_SPECIFICATION. The application routes and client already consistently
+used /api/v1; the specification had stale unversioned /api examples, omitted
+the authenticated source-page route, used the wrong 403 wording, and omitted
+the implemented 413 upload response. Documentation and one frontend type
+comment were corrected; no backend response shape or AI/provider path changed.
+
+Error handlers preserve request IDs in both the JSON envelope and
+X-Request-ID header for tested 401/403/422/429/503 paths, while generic 500
+responses remain opaque. No Gemini or other AI API key was used.
+```
+
+## Decision 2026-09-21 — Targeted PostgreSQL performance pass
+
+```text
+The query audit found the document-status endpoint loading complete job
+history and the processing recovery path scanning that same history. Both now
+use bounded one-row queries. Review queue and reference-data reads use
+explicit projections. Migration
+20260921130000_query_path_indexes.sql adds composite indexes matching newest
+job lookup and per-record chronological audit history, then removes the
+redundant single-column component indexes.
+
+Record search remains escaped ILIKE with pagination; no trigram/full-text or
+fuzzy geographic acceptance was introduced without workload evidence. Raw
+extracted values remain preserved and duplicate detection remains a review
+signal. EXPLAIN was not run because no psql/Supabase CLI or SQL-capable MCP
+surface was available; deployment should run read-only plans after applying
+the migration. No Gemini/API key was used.
+```
+
+## Decision 2026-09-21 — Backend test hardening
+
+```text
+The backend risk matrix was compared with the existing tests before adding
+coverage. The suite already exercised the major authentication, upload,
+processing, validation, review, audit, and transaction rollback paths. The
+new regression tests cover the API-boundary TOKEN_EXPIRED contract, malformed
+provider-response failure with no partial business persistence, and duplicate
+rejection without duplicate audit history. Focused verification passed 210
+tests. The full backend suite passed 287 tests and skipped 1, with 5 known
+multilingual OCR failures caused by TesseractNotFoundError because the
+external Tesseract executable is not installed in the test environment.
+pytest-cov was unavailable, so no coverage percentage was claimed. No
+Gemini/API key or live external service was used.
+```
+
 # END OF MEMORY.md

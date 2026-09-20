@@ -22,9 +22,8 @@ dataset/preprocessed/
 Thumbs.db
 .vscode/
 
-# Local tool configuration that carries a plaintext MCP credential.
-# opencode.json holds an X-Goog-Api-Key for the Stitch MCP server; it must
-# never reach a repository. Keep a placeholder copy as opencode.example.json.
+# Local tool configuration is ignored because it may contain environment-
+# expanded MCP credentials. The checked-in example must contain placeholders.
 opencode.json
 opencode.jsonc
 tessdata/*.traineddata

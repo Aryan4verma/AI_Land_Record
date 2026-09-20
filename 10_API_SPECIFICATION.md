@@ -12,7 +12,8 @@
 
 The API is the contract between frontend and backend.
 
-All API responses should use consistent JSON structures.
+All API responses should use consistent JSON structures, except explicitly
+documented binary source-page responses.
 
 Authentication and authorization are required for protected endpoints.
 
@@ -21,10 +22,10 @@ Authentication and authorization are required for protected endpoints.
 # 2. Authentication
 
 ```text
-POST /api/auth/login
-POST /api/auth/register
-POST /api/auth/logout
-GET  /api/auth/me
+POST /api/v1/auth/login
+POST /api/v1/auth/register
+POST /api/v1/auth/logout
+GET  /api/v1/auth/me
 ```
 
 Login returns an authenticated session/token according to the selected authentication implementation.
@@ -42,15 +43,20 @@ Operator accounts cannot be self-registered. They are provisioned out-of-band
 Role ladder: `user` < `operator` (< `admin`, internal only).
 
 ```text
-user      GET  /records, /records/{id}, /records/{id}/export,
-               /dashboard/*, /documents/{id}, /documents/{id}/status,
-               /documents/{id}/extraction, /documents/{id}/validation,
-               /auth/me
+user      GET  /api/v1/records, /api/v1/records/{id},
+               /api/v1/records/{id}/export, /api/v1/dashboard/*,
+               /api/v1/documents/{id}, /api/v1/documents/{id}/status,
+               /api/v1/documents/{id}/pages/{page},
+               /api/v1/documents/{id}/extraction,
+               /api/v1/documents/{id}/validation, /api/v1/auth/me
 operator  everything above, plus:
-               POST /documents, POST /documents/{id}/process,
-               all /reviews endpoints, /records/{id}/approve,
-               /records/{id}/reject, /records/{id}/audit,
-               /integrations/mock-lrms
+               POST /api/v1/documents,
+               POST /api/v1/documents/{id}/process,
+               all /api/v1/reviews endpoints,
+               /api/v1/records/{id}/approve,
+               /api/v1/records/{id}/reject,
+               /api/v1/records/{id}/audit,
+               /api/v1/integrations/mock-lrms
 ```
 
 Anything an authenticated `user` is not permitted returns `403 INSUFFICIENT_ROLE`.
@@ -62,7 +68,7 @@ Anything an authenticated `user` is not permitted returns `403 INSUFFICIENT_ROLE
 ## Upload
 
 ```text
-POST /api/documents
+POST /api/v1/documents
 ```
 
 Purpose:
@@ -83,7 +89,7 @@ Returns:
 ## Get Document
 
 ```text
-GET /api/documents/{document_id}
+GET /api/v1/documents/{document_id}
 ```
 
 Returns:
@@ -99,7 +105,7 @@ document status
 ## Start Processing
 
 ```text
-POST /api/documents/{document_id}/process
+POST /api/v1/documents/{document_id}/process
 ```
 
 Starts the AI pipeline.
@@ -111,15 +117,25 @@ Returns processing/job status.
 ## Processing Status
 
 ```text
-GET /api/documents/{document_id}/status
+GET /api/v1/documents/{document_id}/status
 ```
+
+## Source Page
+
+```text
+GET /api/v1/documents/{document_id}/pages/{page_number}
+```
+
+Requires an authenticated account with the normal read-access role and
+returns a private JPEG image for the requested source page. The source is
+never made public and storage paths/credentials are not part of this contract.
 
 ---
 
 # 4. Extraction
 
 ```text
-GET /api/documents/{document_id}/extraction
+GET /api/v1/documents/{document_id}/extraction
 ```
 
 Returns extracted fields with confidence and source metadata.
@@ -129,7 +145,7 @@ Returns extracted fields with confidence and source metadata.
 # 5. Validation
 
 ```text
-GET /api/documents/{document_id}/validation
+GET /api/v1/documents/{document_id}/validation
 ```
 
 Returns:
@@ -145,16 +161,38 @@ Returns:
 
 # 6. Review
 
+## List Review Queue
+
+```text
+GET /api/v1/reviews?status=PENDING&assigned_to={user_id}
+```
+
+Status and assignment filters are server-side. `priority` is also supported
+server-side. Existing calls without pagination parameters return the legacy
+array shape. Supplying `priority`, `limit`, or `offset` opts into:
+
+```json
+{
+  "items": [],
+  "limit": 20,
+  "offset": 0,
+  "total": 0
+}
+```
+
+`limit` is bounded to 100. This opt-in shape preserves existing frontend
+callers while allowing a paginated client to be added later.
+
 ## Get Review Task
 
 ```text
-GET /api/reviews/{review_id}
+GET /api/v1/reviews/{review_id}
 ```
 
 ## Submit Correction
 
 ```text
-PATCH /api/reviews/{review_id}/fields/{field_name}
+PATCH /api/v1/reviews/{review_id}/fields/{field_name}
 ```
 
 Request:
@@ -169,7 +207,7 @@ Request:
 ## Complete Review
 
 ```text
-POST /api/reviews/{review_id}/complete
+POST /api/v1/reviews/{review_id}/complete
 ```
 
 ---
@@ -177,8 +215,8 @@ POST /api/reviews/{review_id}/complete
 # 7. Approval
 
 ```text
-POST /api/records/{record_id}/approve
-POST /api/records/{record_id}/reject
+POST /api/v1/records/{record_id}/approve
+POST /api/v1/records/{record_id}/reject
 ```
 
 Backend must recheck required conditions before approval.
@@ -188,8 +226,8 @@ Backend must recheck required conditions before approval.
 # 8. Records
 
 ```text
-GET /api/records
-GET /api/records/{record_id}
+GET /api/v1/records
+GET /api/v1/records/{record_id}
 ```
 
 Supported query parameters may include:
@@ -211,19 +249,33 @@ limit
 # 9. Audit
 
 ```text
-GET /api/records/{record_id}/audit
+GET /api/v1/records/{record_id}/audit
 ```
 
 Only authorized roles may access audit history.
+
+Per-record audit history supports the same optional `limit` and `offset`
+parameters and returns the paginated shape above when either is supplied;
+legacy calls continue to return an ordered array. There is intentionally no
+workspace-wide audit feed in the current product: audit history is consumed
+as a record-scoped timeline.
 
 ---
 
 # 10. Dashboard
 
 ```text
-GET /api/dashboard/summary
-GET /api/dashboard/processing
-GET /api/dashboard/validation
+GET /api/v1/dashboard/summary
+GET /api/v1/dashboard/processing
+GET /api/v1/dashboard/validation
+```
+
+The liveness and dependency health endpoints are intentionally unversioned:
+
+```text
+GET /health
+GET /health/database
+GET /health/ai
 ```
 
 ---
@@ -231,8 +283,8 @@ GET /api/dashboard/validation
 # 11. Integration / Export
 
 ```text
-GET /api/records/{record_id}/export
-POST /api/integrations/mock-lrms
+GET /api/v1/records/{record_id}/export
+POST /api/v1/integrations/mock-lrms
 ```
 
 The mock LRMS endpoint exists for hackathon demonstration.
@@ -264,8 +316,9 @@ Use a consistent format:
 201 → created
 202 → accepted for asynchronous processing
 400 → bad request
+413 → request entity/file too large
 401 → unauthenticated
-403 → unauthorized
+403 → authenticated but forbidden
 404 → not found
 409 → conflict
 422 → validation failure

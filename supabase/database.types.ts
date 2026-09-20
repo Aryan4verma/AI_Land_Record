@@ -500,6 +500,7 @@ export type Database = {
           created_at: string
           email: string
           id: string
+          id_number: string | null
           name: string
           password_hash: string | null
           role: string
@@ -511,6 +512,7 @@ export type Database = {
           created_at?: string
           email: string
           id?: string
+          id_number?: string | null
           name: string
           password_hash?: string | null
           role: string
@@ -522,6 +524,7 @@ export type Database = {
           created_at?: string
           email?: string
           id?: string
+          id_number?: string | null
           name?: string
           password_hash?: string | null
           role?: string
