@@ -38,7 +38,20 @@ def validate_auth_secret(secret: str) -> None:
 
 def _frontend_dist() -> Path:
     """Resolve the optional production bundle in both local and container layouts."""
-    return Path(__file__).resolve().parents[2] / "frontend" / "dist"
+    module_path = Path(__file__).resolve()
+    # Container: /app/app/main.py -> /app/frontend/dist.
+    # Local checkout: <repo>/backend/app/main.py -> <repo>/frontend/dist.
+    candidates = (
+        module_path.parents[1] / "frontend" / "dist",
+        module_path.parents[2] / "frontend" / "dist",
+    )
+    for candidate in candidates:
+        if (candidate / "index.html").is_file():
+            return candidate
+    # Keep the container layout as the default when no build is present. The
+    # caller checks index.html before installing the SPA routes, so standalone
+    # backend development remains unaffected.
+    return candidates[0]
 
 
 @asynccontextmanager
