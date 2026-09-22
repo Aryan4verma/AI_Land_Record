@@ -99,6 +99,7 @@ def get_document_status(
         "job_id": latest.get("id") if latest else None,
         "job_status": latest.get("status") if latest else None,
         "error_code": latest.get("error_code") if latest else None,
+        "error_message": latest.get("error_message") if latest else None,
         "started_at": latest.get("started_at") if latest else None,
         "completed_at": latest.get("completed_at") if latest else None,
     }

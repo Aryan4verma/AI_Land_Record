@@ -41,7 +41,9 @@ transport; no provider calls leave the machine.
 
 Application code calls `extract_land_record()` in `app.ai` — never a
 provider adapter directly. First provider: Gemini (REST via httpx, no SDK).
-Model/key/timeout are env-driven: `AI_PROVIDER`, `AI_MODEL`,
+The free-demo default is `gemini-2.5-flash-lite`, which supports the existing
+structured-output extraction contract. Model/key/timeout are env-driven:
+`AI_PROVIDER`, `AI_MODEL`,
 `AI_TIMEOUT_SECONDS`, `GEMINI_API_KEY` (server-side only).
 
 STEP 13 reliability: `AI_FALLBACKS` adds ordered `provider:model` lanes

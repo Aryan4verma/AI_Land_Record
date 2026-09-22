@@ -33,6 +33,7 @@ class DocumentStatusOut(BaseModel):
     job_id: UUID | None = None
     job_status: str | None = None
     error_code: str | None = None
+    error_message: str | None = None
     started_at: datetime | None = None
     completed_at: datetime | None = None
 

@@ -54,7 +54,7 @@ def test_processing_status_reads_are_bounded_to_one_row():
     latest = store.latest_job_for_document("doc-1")
     assert latest["id"] == "job-1"
     assert client.chains[-1].limit_value == 1
-    assert client.chains[-1].select_args[0] == ("id,status,error_code,started_at,completed_at",)
+    assert client.chains[-1].select_args[0] == ("id,status,error_code,error_message,started_at,completed_at",)
 
     assert store.has_active_job_for_document("doc-1") is True
     active = client.chains[-1]

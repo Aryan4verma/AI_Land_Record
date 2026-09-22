@@ -7,6 +7,34 @@
   .extract-grid { grid-template-columns: 5fr 7fr; align-items: start; }
 }
 
+/* Private source evidence pane. The browser receives only a short-lived
+ * object URL created from the authenticated page response. */
+.source-viewer { padding: 0; overflow: hidden; }
+.source-viewer-head { margin-bottom: 0; padding: var(--space-lg) var(--space-lg) var(--space-md); }
+.source-viewer-head .t-eyebrow { display: block; margin-bottom: var(--space-2xs); }
+.source-stage {
+  min-height: 22rem;
+  margin: 0 var(--space-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: auto;
+  background: var(--navy-950);
+  border: 1px solid var(--navy-800);
+}
+.source-stage > [aria-busy="true"] { width: min(80%, 22rem); }
+.source-stage .stateblock { margin: var(--space-lg); color: var(--surface); }
+.source-stage .stateblock p { color: var(--navy-200); }
+.source-stage img { display: block; max-width: 100%; height: auto; object-fit: contain; }
+.source-controls { display: flex; align-items: center; justify-content: center; gap: var(--space-sm); padding: var(--space-md) var(--space-lg) var(--space-sm); }
+.source-page-label { display: inline-flex; align-items: center; gap: var(--space-xs); font-size: var(--text-label-md); color: var(--muted); }
+.source-page-input { width: 4rem; min-height: 2.25rem; padding: 0 var(--space-xs); border: 1px solid var(--border-strong); border-radius: var(--r-default); background: var(--surface); color: var(--ink); text-align: center; }
+.source-page-input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.source-note { margin: 0; padding: 0 var(--space-lg) var(--space-md); color: var(--muted); font-size: var(--text-body-sm); text-align: center; }
+.source-meta { margin: 0 var(--space-lg) var(--space-lg); border-top: 1px solid var(--border); padding-top: var(--space-sm); }
+.source-meta summary { cursor: pointer; color: var(--ink-2); font-size: var(--text-label-md); }
+.source-meta .kv { margin-top: var(--space-sm); }
+
 /* Key-value metadata lists */
 .kv { margin: 0; display: flex; flex-direction: column; }
 .kv > div {
@@ -98,6 +126,12 @@
   animation: val-flash 1.6s ease-out 1;
 }
 @media (prefers-reduced-motion: reduce) { .val-flash { animation: none; } }
+
+@media (max-width: 700px) {
+  .source-stage { min-height: 16rem; margin: 0 var(--space-md); }
+  .source-controls { padding-inline: var(--space-md); }
+  .source-note, .source-meta { margin-inline: var(--space-md); padding-inline: 0; }
+}
 
 /* ---- ValidationSummary rows ---- */
 .val-overall { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-sm); margin-bottom: var(--space-base); }

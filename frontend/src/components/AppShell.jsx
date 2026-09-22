@@ -5,23 +5,18 @@ import "../styles/shell.css";
 
 const NAV = [
   {
-    section: "Workspace",
+    section: "Cadastral Operations",
     items: [
       { key: "dashboard", label: "Dashboard", href: "#/", icon: "grid" },
       { key: "documents", label: "Documents", href: "#/records", icon: "folder" },
       { key: "upload", label: "Upload", href: "#/upload", icon: "upload", operatorOnly: true },
       { key: "reviews", label: "Review Queue", href: "#/reviews", icon: "review", operatorOnly: true },
-    ],
-  },
-  {
-    section: "Insights",
-    items: [
       { key: "analytics", label: "Analytics", href: "#/analytics", icon: "chart" },
       { key: "audit", label: "Audit Trail", href: "#/audit", icon: "history" },
     ],
   },
   {
-    section: "System",
+    section: "Institutional Core",
     items: [
       { key: "settings", label: "Settings", href: "#/settings", icon: "settings" },
       { key: "help", label: "Help", href: "#/help", icon: "help" },
@@ -132,6 +127,10 @@ export default function AppShell({ active, user, onLogout, crumb, children }) {
               <path strokeLinecap="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
             </svg>
           </button>
+          <div className="topheader-brand" aria-label="BHOOMI INTEL application">
+            <span className="topheader-brand-mark" aria-hidden="true">◆</span>
+            <span className="topheader-brand-copy"><strong>BHOOMI INTEL</strong><small>PS-26018 · Cadastral Intelligence</small></span>
+          </div>
           <nav className="topheader-crumb" aria-label="Breadcrumb">{crumb}</nav>
           <div className="topheader-right">
             {engine && (
@@ -139,6 +138,7 @@ export default function AppShell({ active, user, onLogout, crumb, children }) {
                 <span className="health-pill-dot" aria-hidden="true" />{engine}
               </span>
             )}
+            <span className="topheader-user-context"><strong>{user?.name || user?.email || "Signed in"}</strong><small>{user?.role || "user"}</small></span>
           </div>
         </header>
         <main className="content">{children}</main>

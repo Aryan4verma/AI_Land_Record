@@ -29,6 +29,7 @@ export default function ProcessingStepper({ steps }) {
               {s.state === "active" && "In progress"}
               {s.state === "queued" && "Queued"}
               {s.state === "failed" && "Failed"}
+              {s.state === "unknown" && "Not reported"}
             </span>
           </span>
         </li>

@@ -321,7 +321,7 @@ in AIService._REGISTRY, so OpenRouter/NVIDIA plug in without touching
 callers. GeminiAdapter uses plain httpx REST (generateContent +
 responseMimeType application/json, temperature 0) — no SDK install.
 Model/key/timeout env-driven: AI_PROVIDER/AI_MODEL (default
-gemini-2.0-flash)/AI_TIMEOUT_SECONDS/GEMINI_API_KEY, server-side only.
+gemini-2.5-flash-lite)/AI_TIMEOUT_SECONDS/GEMINI_API_KEY, server-side only.
 Failures map to classified ProviderError (transient flag reserved for the
 later fallback step); no fallback logic in this step. Prompt v1 demands
 JSON-only, exact 04 field names, null-when-absent, and fences the OCR text
@@ -1839,6 +1839,92 @@ multilingual OCR failures caused by TesseractNotFoundError because the
 external Tesseract executable is not installed in the test environment.
 pytest-cov was unavailable, so no coverage percentage was claimed. No
 Gemini/API key or live external service was used.
+```
+
+## Decision 2026-09-21 — Frontend visual redesign continuation
+
+```text
+The frontend keeps the existing React/Vite routes, API contracts, RBAC, and
+real workflow behavior. The redesign continues the restrained civic workspace
+language already present in the repository: navy structural surfaces, white
+content planes, semantic status tiers, compact evidence-first layouts, and
+reduced motion.
+
+The source document pane now requests rendered pages through the authenticated
+private document-page endpoint and displays only an in-memory object URL. It
+does not expose storage paths or credentials. Review detail uses the source
+pane as a stable evidence column, and processing status gains a clearer
+backend-authoritative overview without inventing per-stage telemetry. No
+backend or database changes were made.
+```
+
+## Decision 2026-09-21 — Final frontend design-system alignment
+
+```text
+The Stitch project metadata for Bhoomi Intel Land Console (project
+15783984513634451049) confirms the Sovereign Cadastre Intelligence system:
+Inter, JetBrains Mono for cadastral identifiers, deep navy structural
+surfaces, #F8FAFC workspace canvas, #2563EB operational accent, semantic
+emerald/amber/crimson states, crisp 1px borders, 4px controls, compact 36px
+table rows, and geometric corners. The frontend tokens and shared primitives
+were aligned to those values without changing routes, API contracts, state,
+permissions, or backend/database code. Screen source-file downloads remain
+session-gated outside the Stitch MCP surface; no inaccessible screen content
+was represented as verified implementation detail.
+```
+
+[2026-09-21] FRONTEND SOURCE-PANE AND PROCESSING POLISH
+
+```text
+The frontend-only visual pass tightened the Stitch-aligned processing and
+evidence surfaces without changing backend/database/API contracts. Added the
+missing navy secondary tokens used by dark overview/source states, rounded the
+processing overview to the shared geometric control system, and made source
+page loading/error transitions clear stale evidence before rendering the next
+authenticated page. Frontend verification remains green: 164 tests, tsc,
+oxlint, and Vite build.
+```
+
+## Decision 2026-09-21 — Live persistence RPC deployment
+
+```text
+The corrected Supabase project is ivmkvwudblcqhtoiqlaf, matching the backend
+configuration. The live public.persist_processing_result function was missing;
+the backend RPC call reproduced SQLSTATE 42883 / PostgREST missing-function
+behavior, which had been collapsed into PERSISTENCE_FAILED. The affected job
+had no land record, OCR rows, extracted fields, validation rows, or review
+task, so no partial write occurred.
+
+Applied the existing atomic_processing_persistence migration and the existing
+processing_lifecycle_hardening migration to the live project. Verified the
+12-parameter JSONB-returning RPC, SECURITY INVOKER posture, service_role-only
+grant, and startup reconciliation. A real retry reached SUCCEEDED with one
+land record, one OCR row, fourteen extracted fields, three validation rows,
+one open review task, and one completion audit. Added regression coverage for
+safe PGRST202 diagnostics and suppressed INFO-level httpx/httpcore URLs so
+provider query-string credentials cannot enter logs. The unrelated query-path
+index migration remains unapplied.
+```
+
+## Decision 2026-09-22 — Free SIH demo deployment preparation
+
+```text
+Added a Render-compatible Dockerfile based on Python 3.12 slim with system
+Tesseract 5 and eng/hin/guj language packages. The hosted processing path now
+renders PDF pages one at a time and bounds oversized raster pages at 20M
+pixels, preserving the existing OCR page/bounding-box contract.
+
+The free-demo configuration now defaults to the supported structured-output
+model gemini-2.5-flash-lite and documents OpenRouter's openrouter/free router as
+the fallback. No provider call was made during this pass. Added DEPLOYMENT.md,
+Cloudflare SPA fallback, and read-only deployment smoke checks. The live
+Supabase project passed a read-only ping and the previously missing atomic RPC
+was already verified live with successful persisted jobs.
+
+Verification: backend 299 passed + 1 skipped, focused final OCR/processing/demo
+44 passed, frontend 167 passed, typecheck/lint/build clean, secret scan clean,
+FastAPI /health startup smoke passed. Docker image build remains unverified
+because Docker Desktop's Linux engine is not running on the current host.
 ```
 
 # END OF MEMORY.md

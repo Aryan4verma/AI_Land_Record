@@ -17,13 +17,14 @@ ROOT = Path(__file__).resolve().parents[2]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from app.db_errors import classify_db_error, sqlstate_of  # noqa: E402
+from app.db_errors import classify_db_error, provider_code_of, sqlstate_of  # noqa: E402
 from app.errors import AppError  # noqa: E402
 from app.records.typed_values import (  # noqa: E402
     coerce_area,
     coerce_record_date,
     coerce_typed_columns,
 )
+from app.reviews.stores import SupabaseRecordStore  # noqa: E402
 from tests.test_processing import (  # noqa: E402
     CLEAN_VALUES,
     DOC_ID,
@@ -260,6 +261,40 @@ def test_unknown_exception_is_500_not_misreported_as_unavailable():
     assert (err.status, err.code) == (500, "PERSISTENCE_FAILED")
 
 
+def test_rpc_persistence_failure_is_classified_instead_of_nameerror():
+    """The RPC error handler must preserve the database classification path."""
+    class _RpcClient:
+        def rpc(self, _name, _payload):
+            return self
+
+        def execute(self):
+            raise _PgError("22008", 'date/time field value out of range: "99/99/2024"')
+
+    with pytest.raises(AppError) as exc:
+        SupabaseRecordStore(_RpcClient()).persist_processing_result(example=True)
+
+    assert exc.value.code == "INVALID_FIELD_VALUE"
+    assert exc.value.status == 422
+
+
+def test_missing_rpc_is_safe_and_keeps_provider_diagnostic(caplog):
+    """A missing deployed RPC stays safe for users but visible to operators."""
+    class _RpcClient:
+        def rpc(self, _name, _payload):
+            return self
+
+        def execute(self):
+            raise _PgError("PGRST202", "Could not find the function in the schema cache")
+
+    with caplog.at_level("WARNING"):
+        with pytest.raises(AppError) as exc:
+            SupabaseRecordStore(_RpcClient()).persist_processing_result(example=True)
+
+    assert (exc.value.status, exc.value.code) == (500, "PERSISTENCE_FAILED")
+    assert "PGRST202" in caplog.text
+    assert "Could not find the function" not in exc.value.message
+
+
 def test_client_messages_never_echo_the_offending_value():
     err = _classify(_PgError("22008", 'date/time field value out of range: "99/99/2024"'))
     assert BAD_DATE not in err.message
@@ -269,6 +304,12 @@ def test_sqlstate_is_extracted_from_attribute_and_from_message():
     assert sqlstate_of(_PgError("23505")) == "23505"
     assert sqlstate_of(Exception("ERROR:  22008: date/time field value out of range")) == "22008"
     assert sqlstate_of(Exception("no code here")) is None
+
+
+def test_postgrest_provider_code_is_preserved_for_server_diagnostics():
+    assert provider_code_of(_PgError("PGRST202")) == "PGRST202"
+    assert provider_code_of(Exception("PostgREST returned PGRST202")) == "PGRST202"
+    assert provider_code_of(Exception("no provider code here")) is None
 
 
 def test_apperror_passes_through_store_guard_unchanged():

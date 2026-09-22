@@ -3,7 +3,6 @@ import { getMe, getToken, getUser, logout as clientLogout, onSessionExpired, set
 import Analytics from "./views/Analytics.jsx";
 import AppShell from "./components/AppShell.jsx";
 import ApprovedRecord from "./views/ApprovedRecord.jsx";
-import AuthLanding from "./views/AuthLanding.jsx";
 import Dashboard from "./views/Dashboard.jsx";
 import DocumentExtraction from "./views/DocumentExtraction.jsx";
 import DocumentProcessing from "./views/DocumentProcessing.jsx";
@@ -86,14 +85,12 @@ export default function App() {
     return <main><div className="card"><p>Checking session…</p></div></main>;
   }
   if (!authed || hash === "#/login" || hash === "#/auth" || hash === "#/sign-in") {
-    // Unauthenticated entry lands on #/auth (Login or Sign in); #/login and
-    // #/sign-in render their forms directly. All stay full-bleed.
-    const entry = hash === "#/login" ? (
-      <Login onLogin={(u) => { setUserState(u); window.location.hash = "#/"; }} />
-    ) : hash === "#/sign-in" ? (
+    // Every unauthenticated entry point uses the real Login form directly.
+    // #/sign-in remains the existing registration route.
+    const entry = hash === "#/sign-in" ? (
       <SignUp />
     ) : (
-      <AuthLanding />
+      <Login onLogin={(u) => { setUserState(u); window.location.hash = "#/"; }} />
     );
     return <main>{entry}</main>;
   }

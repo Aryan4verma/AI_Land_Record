@@ -7,6 +7,7 @@ from typing import Any, Protocol
 from fastapi import Request
 
 from ..database import require_db
+from ..db_errors import classify_db_error
 from ..errors import AppError
 
 

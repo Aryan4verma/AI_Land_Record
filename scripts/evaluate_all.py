@@ -61,7 +61,7 @@ def main() -> int:
     args = _parse()
     manifest = read_json(DATASET / "manifest.json")
     docs = manifest["documents"]
-    model = backend_env("AI_MODEL", "gemini-2.0-flash") or "gemini-2.0-flash"
+    model = backend_env("AI_MODEL", "gemini-2.5-flash-lite") or "gemini-2.5-flash-lite"
     prompt_v = prompt_version()
 
     missing_ocr = [d["id"] for d in docs if not (DATASET / "ocr_outputs" / f"{d['id']}.json").is_file()]

@@ -34,6 +34,7 @@ log = get_logger(__name__)
 # words in a driver message — "ERROR" is also five uppercase chars —
 # from being mistaken for a code.
 _SQLSTATE = re.compile(r"\b(\d{2}[0-9A-Z]{3})\b")
+_POSTGREST_CODE = re.compile(r"\b(PGRST\d{3})\b")
 
 # Permanent, caller-caused faults.
 _DATA_CLASS = "22"          # data exception: 22008 datetime, 22P02 invalid text, ...
@@ -68,6 +69,15 @@ def sqlstate_of(exc: BaseException) -> str | None:
     return match.group(1) if match else None
 
 
+def provider_code_of(exc: BaseException) -> str | None:
+    """Extract a safe PostgREST/provider code without retaining its message."""
+    code = getattr(exc, "code", None)
+    if isinstance(code, str) and _POSTGREST_CODE.fullmatch(code):
+        return code
+    match = _POSTGREST_CODE.search(str(exc))
+    return match.group(1) if match else None
+
+
 def _is_unavailable(exc: BaseException, state: str | None) -> bool:
     if state and state.startswith(_UNAVAILABLE_CLASSES):
         return True
@@ -88,9 +98,10 @@ def classify_db_error(exc: BaseException, *, subject: str, action: str) -> AppEr
     ("create record") — both appear in logs only, never in client output.
     """
     state = sqlstate_of(exc)
+    provider_code = provider_code_of(exc)
     log.warning(
-        "database error: action=%s sqlstate=%s type=%s",
-        action, state or "unknown", type(exc).__name__,
+        "database error: action=%s sqlstate=%s provider_code=%s type=%s",
+        action, state or "unknown", provider_code or "unknown", type(exc).__name__,
     )
 
     if state and (state.startswith(_DATA_CLASS) or state in (_CHECK_VIOLATION, _NOT_NULL)):

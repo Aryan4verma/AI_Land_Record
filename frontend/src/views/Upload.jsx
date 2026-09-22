@@ -304,242 +304,182 @@ export default function Upload() {
     );
   }
 
+  const terminal = !!doc && isProcessingTerminal(status);
+  const currentStage = !doc ? "upload" : terminal ? "review" : "pipeline";
+  const selectedName = doc?.file_name || file?.name || "No instrument selected";
+  const selectedType = doc?.file_type || file?.type || "Awaiting file selection";
+  const selectedSize = doc ? formatSize(doc.file_size) : file ? formatSize(file.size) : "—";
+  const integrity = doc?.checksum ? `SHA-256: ${shortHash(doc.checksum)}` : file ? "Backend hash generated after upload" : "Hash generated on secure upload";
+
+  function stageClass(stage) {
+    if (currentStage === stage) return "is-active";
+    if ((stage === "upload" && currentStage !== "upload") || (stage === "pipeline" && currentStage === "review")) return "is-complete";
+    return "";
+  }
+
+  function openPicker() {
+    inputRef.current?.click();
+  }
+
   return (
-    <div>
-      <PageHeader
-        title="Upload document"
-        sub="Upload a land record to begin AI-assisted digitization."
-      />
+    <div className="upload-view">
+      <section className="upload-workflow-bar" aria-label="Ingestion workflow">
+        <div className="upload-workflow-track">
+          <span className="upload-eyebrow">Workflow stage:</span>
+          <span className={`upload-stage ${stageClass("upload")}`}><i />1. Upload &amp; pre-inspection</span>
+          <span className="upload-stage-arrow" aria-hidden="true">→</span>
+          <span className={`upload-stage ${stageClass("pipeline")}`}>2. Pipeline extraction</span>
+          <span className="upload-stage-arrow" aria-hidden="true">→</span>
+          <span className={`upload-stage ${stageClass("review")}`}>3. Review &amp; adjudication</span>
+        </div>
+        <div className="upload-security-strip">
+          <span className="upload-version">NLRMP ingestion</span>
+          <span><b aria-hidden="true">◆</b> SHA-256 integrity logging</span>
+        </div>
+      </section>
 
-      {!doc && (
-        <div className="panel">
-          <div
-            className={`dropzone${dragging ? " dragging" : ""}`}
-            role="button"
-            tabIndex={0}
-            aria-label="Choose a document to upload: PDF, PNG, JPEG, or TIFF up to 10 MB"
-            onClick={() => inputRef.current?.click()}
-            onKeyDown={(ev) => {
-              if (ev.key === "Enter" || ev.key === " ") {
-                ev.preventDefault();
-                inputRef.current?.click();
-              }
-            }}
-            onDragOver={(ev) => { ev.preventDefault(); setDragging(true); }}
-            onDragLeave={() => setDragging(false)}
-            onDrop={(ev) => {
-              ev.preventDefault();
-              setDragging(false);
-              pickFile(ev.dataTransfer.files && ev.dataTransfer.files[0]);
-            }}
-          >
-            <span className="dropzone-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
-              </svg>
-            </span>
-            <span className="dropzone-title">Drop your document here</span>
-            <span className="dropzone-sub">or <u>choose a file</u></span>
-            <span className="dropzone-formats">PDF, PNG, JPEG or TIFF · up to 10 MB</span>
-            <input
-              ref={inputRef}
-              type="file"
-              accept={ACCEPT}
-              hidden
-              aria-hidden="true"
-              tabIndex={-1}
-              onChange={(ev) => pickFile(ev.target.files && ev.target.files[0])}
-            />
-          </div>
+      <section className="upload-pagehead">
+        <div>
+          <h1>Ingest Cadastral Record &amp; Deed Instruments</h1>
+          <p>Statutory land document ingestion, OCR, and deterministic validation pipeline.</p>
+        </div>
+        <div className="upload-page-actions">
+          <a href="#/audit" className="upload-compact-button">⌁ <span>Ingestion logs</span></a>
+          {doc && <button type="button" className="upload-compact-button" onClick={uploadAnother}>＋ <span>Upload another</span></button>}
+        </div>
+      </section>
 
-          {!file && (
-            /* The page was otherwise an empty rectangle. Saying what happens
-               next sets expectations and makes the wait feel intentional. */
-            <ol className="upload-steps">
-              {[
-                { n: "1", t: "Read the document",
-                  d: "The page is prepared and its text is recognised, including Hindi and Gujarati." },
-                { n: "2", t: "Pull out the details",
-                  d: "Owner, survey number, area, village and the rest of the record fields." },
-                { n: "3", t: "Check the record",
-                  d: "Fixed verification rules flag anything that needs a human to confirm it." },
-                { n: "4", t: "You decide",
-                  d: "Nothing is approved automatically. You review, correct and approve." },
-              ].map((step) => (
-                <li key={step.n}>
-                  <span className="upload-steps-n" aria-hidden="true">{step.n}</span>
-                  <span>
-                    <span className="upload-steps-t">{step.t}</span>
-                    <span className="upload-steps-d">{step.d}</span>
-                  </span>
-                </li>
-              ))}
-            </ol>
-          )}
-
-          {fileError && <Alert tone="error" title="Invalid file">{fileError}</Alert>}
-          {error && <Alert tone="error" title="Upload failed">{error}</Alert>}
-
-          {file && (
-            <>
-              <div className="filechip">
-                <span className="filechip-icon" aria-hidden="true">
-                  {(file.name.split(".").pop() || "").slice(0, 3).toUpperCase() || "•"}
-                </span>
-                <div className="filechip-meta">
-                  <div className="filechip-name">{file.name}</div>
-                  <div className="filechip-sub">{file.type || "unknown type"} • {formatSize(file.size)}</div>
-                </div>
-                <button type="button" className="filechip-remove" onClick={() => pickFile(null)} disabled={uploading}>
-                  Remove
-                </button>
-              </div>
-
-              <form onSubmit={uploadAndProcess}>
-                <div className="upload-meta-grid">
-                  <TextInput
-                    label="Document type"
-                    hint="Optional"
-                    id="upload-doctype"
-                    placeholder="e.g. khata"
-                    value={documentType}
-                    disabled={uploading}
-                    maxLength={64}
-                    onChange={(e) => setDocumentType(e.target.value)}
-                  />
-                  <TextInput
-                    label="Language"
-                    hint="Optional"
-                    id="upload-language"
-                    placeholder="e.g. en"
-                    value={language}
-                    disabled={uploading}
-                    maxLength={32}
-                    onChange={(e) => setLanguage(e.target.value)}
-                  />
-                </div>
-
-                {demoEnabled && (
-                  <fieldset className="upload-mode">
-                    <legend>Processing mode</legend>
-                    <div className="upload-mode-options">
-                      {[
-                        { value: "live", label: "Live",
-                          hint: "Reads the document with the full pipeline." },
-                        { value: "demo", label: "Demo",
-                          hint: "Uses configured demonstration data for a known document." },
-                      ].map((opt) => (
-                        <label key={opt.value} className="upload-mode-option">
-                          <input
-                            type="radio"
-                            name="processing-mode"
-                            value={opt.value}
-                            checked={mode === opt.value}
-                            disabled={uploading}
-                            onChange={() => setMode(opt.value)}
-                          />
-                          <span>
-                            <span className="upload-mode-label">{opt.label}</span>
-                            <span className="upload-mode-hint">{opt.hint}</span>
-                          </span>
-                        </label>
-                      ))}
-                    </div>
-                    {mode === "demo" && (
-                      <p className="upload-mode-note">
-                        Demonstration mode. This reads configured demonstration data instead
-                        of processing the document, and only works for the documents your
-                        administrator has set up.
-                      </p>
-                    )}
-                  </fieldset>
-                )}
-                {uploading && (
-                  <div className="progressbar" role="progressbar" aria-label="Uploading document">
-                    <div className="progressbar-indet" />
+      <div className="upload-grid">
+        <div className="upload-left-column">
+          <section className="upload-card">
+            <header className="upload-card-header">
+              <h2><span aria-hidden="true">⇧</span> Upload cadastral instrument</h2>
+              <span className="upload-card-code">{doc ? `Document: ${doc.id.slice(0, 8)}…` : "Private source storage"}</span>
+            </header>
+            {!file && !doc ? (
+              <div className="upload-card-body">
+                <div
+                  className={`upload-dropzone${dragging ? " is-dragging" : ""}`}
+                  role="button"
+                  tabIndex={0}
+                  aria-label="Choose a document to upload: PDF, PNG, JPEG, or TIFF up to 10 MB"
+                  onClick={openPicker}
+                  onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); openPicker(); } }}
+                  onDragOver={(event) => { event.preventDefault(); setDragging(true); }}
+                  onDragLeave={() => setDragging(false)}
+                  onDrop={(event) => { event.preventDefault(); setDragging(false); pickFile(event.dataTransfer.files && event.dataTransfer.files[0]); }}
+                >
+                  <span className="upload-dropzone-icon" aria-hidden="true">▧</span>
+                  <strong>Drop a certified land record or scan here</strong>
+                  <p>Upload a supported source document for server-side integrity checks and processing.</p>
+                  <span className="upload-browse-button">▣ Browse institutional files</span>
+                  <input ref={inputRef} type="file" accept={ACCEPT} hidden aria-hidden="true" tabIndex={-1} onChange={(event) => pickFile(event.target.files && event.target.files[0])} />
+                  <div className="upload-capability-grid">
+                    <div><span>Formats</span><strong>PDF · PNG · JPEG · TIFF</strong></div>
+                    <div><span>Max threshold</span><strong>10 MB per file</strong></div>
+                    <div><span>Validation</span><strong>Type + magic bytes</strong></div>
+                    <div><span>Integrity</span><strong>SHA-256 on upload</strong></div>
                   </div>
-                )}
-                <div className="upload-actions">
-                  <Button type="button" variant="secondary" onClick={cancel}>
-                    {uploading ? "Cancel upload" : "Cancel"}
-                  </Button>
-                  <Button type="submit" variant="primary" disabled={uploading}>
-                    {uploading ? "Uploading…" : "Upload & Process"}
-                  </Button>
                 </div>
-              </form>
-            </>
+              </div>
+            ) : (
+              <div className="upload-card-body upload-uploaded-source">
+                <div className="upload-source-summary">
+                  <span className="upload-file-icon" aria-hidden="true">{(selectedName.split(".").pop() || "FILE").slice(0, 3).toUpperCase()}</span>
+                  <div className="upload-source-copy">
+                    <strong title={selectedName}>{selectedName}</strong>
+                    <span>{selectedType} · {selectedSize}</span>
+                    <small className={doc ? "is-verified" : ""}>{doc ? "✓ Backend document created" : "✓ Local type and size checks passed"}</small>
+                  </div>
+                  {!doc && <button type="button" className="upload-link-button" onClick={() => pickFile(null)} disabled={uploading}>Remove</button>}
+                </div>
+                <div className="upload-integrity-row"><span>Integrity status</span><code>{integrity}</code></div>
+              </div>
+            )}
+            {fileError && <div className="upload-inline-alert"><Alert tone="error" title="Invalid file">{fileError}</Alert></div>}
+            {error && !doc && <div className="upload-inline-alert"><Alert tone="error" title="Upload failed">{error}</Alert></div>}
+          </section>
+
+          {(file || doc) && (
+            <section className="upload-card">
+              <header className="upload-card-header">
+                <h2><span className="is-success" aria-hidden="true">✓</span> Currently selected &amp; staged instrument</h2>
+                <StatusBadge tone={doc ? statusTone(status) : "processing"}>{doc ? statusLabel(status) : "Ready for upload"}</StatusBadge>
+              </header>
+              <div className="upload-card-body">
+                <div className="upload-facts-grid">
+                  <div><span>Source type</span><strong>{selectedType}</strong></div>
+                  <div><span>File size</span><strong>{selectedSize}</strong></div>
+                  <div><span>Document state</span><strong>{doc ? statusLabel(status) : "Awaiting upload"}</strong></div>
+                  <div><span>Source hash</span><strong>{doc?.checksum ? shortHash(doc.checksum) : "Generated on upload"}</strong></div>
+                </div>
+                <div className="upload-inspector-row">
+                  <span>Source evidence remains private and linked to the processing record.</span>
+                  {doc ? <a href={`#/document/${doc.id}`}>Open processing view ↗</a> : <span>Not yet stored</span>}
+                </div>
+              </div>
+            </section>
           )}
         </div>
-      )}
 
-      {doc && (
-        <div className="vstack">
-          <div className="panel">
-            <div className="panel-head">
-              <div>
-                <h2>Staged record</h2>
-                <p className="panel-sub">Live status for this document.</p>
+        <div className="upload-right-column">
+          <section className="upload-card upload-controls-card">
+            <header className="upload-card-header">
+              <h2><span aria-hidden="true">⚙</span> Pre-processing &amp; jurisdiction</h2>
+              <span className="upload-card-code">Server-authoritative</span>
+            </header>
+            <form className="upload-card-body" onSubmit={uploadAndProcess}>
+              <div className="upload-readonly-grid">
+                <div><span>Storage</span><strong>Private document bucket</strong></div>
+                <div><span>Backend guard</span><strong>Auth + MIME + bytes</strong></div>
               </div>
-              <Button variant="secondary" onClick={uploadAnother}>Upload another</Button>
-            </div>
-            {error && <Alert tone="error" title="Processing note">{error}</Alert>}
-            <p className="tracker-id"><b>document_id:</b> <code className="tnum">{doc.id}</code></p>
-            <p><a href={`#/document/${doc.id}`}>Open processing view</a></p>
-            <p className="tracker-id muted">SHA-256 <code className="tnum">{shortHash(doc.checksum)}</code></p>
-            <div className="tracker-row">
-              <b>Status:</b>
-              <StatusBadge tone={statusTone(status)}>{statusLabel(status) || "—"}</StatusBadge>
-              {watching && <span className="muted">auto-refreshing…</span>}
-              <Button variant="secondary" onClick={refresh}>Refresh status</Button>
-              <Button variant="secondary" onClick={loadResults} disabled={resultsLoading}>
-                {resultsLoading ? "Loading…" : "Load extraction + validation"}
-              </Button>
-            </div>
-          </div>
-
-          {resultsLoading && !extraction && (
-            <div className="panel"><Skeleton lines={4} /></div>
-          )}
-          {resultsError && !extraction && (
-            <div className="panel">
-              <ErrorState title="Results unavailable" message={resultsError} requestId={resultsRef || undefined} onRetry={loadResults} />
-            </div>
-          )}
-          {extraction && (
-            <div className="panel">
-              <div className="panel-head">
-                <div>
-                  <h2>Extracted fields ({extraction.fields.length})</h2>
-                </div>
+              <div className="upload-form-grid">
+                <TextInput label="Document type" hint="Optional" id="upload-doctype" placeholder="e.g. khata" value={documentType} disabled={uploading || !!doc} maxLength={64} onChange={(event) => setDocumentType(event.target.value)} />
+                <TextInput label="Language" hint="Optional" id="upload-language" placeholder="e.g. en" value={language} disabled={uploading || !!doc} maxLength={32} onChange={(event) => setLanguage(event.target.value)} />
               </div>
-              <DataTable columns={["Field", "Value", "Confidence"]}>
-                {extraction.fields.map((f) => (
-                  <tr key={f.field_name}>
-                    <td><code>{f.field_name}</code></td>
-                    <td>{f.value === null ? <span className="muted">Not found</span> : String(f.value)}</td>
-                    <td><ConfidenceBadge value={f.confidence} /></td>
-                  </tr>
-                ))}
-              </DataTable>
-              {extraction.record_id && (
-                <p><a href={`#/record/${extraction.record_id}`}>Open record {extraction.record_id.slice(0, 8)}…</a></p>
+              {demoEnabled && !doc && (
+                <fieldset className="upload-mode upload-mode-stitch">
+                  <legend>Pipeline processing mode</legend>
+                  <div className="upload-mode-options">
+                    <label className={`upload-mode-option${mode === "live" ? " is-selected" : ""}`}><input type="radio" name="processing-mode" value="live" checked={mode === "live"} disabled={uploading} onChange={() => setMode("live")} /><span><b>Live pipeline</b><small>Reads the uploaded document.</small></span></label>
+                    <label className={`upload-mode-option${mode === "demo" ? " is-selected" : ""}`}><input type="radio" name="processing-mode" value="demo" checked={mode === "demo"} disabled={uploading} onChange={() => setMode("demo")} /><span><b>Demo mode</b><small>Uses configured demonstration data.</small></span></label>
+                  </div>
+                  {mode === "demo" && <p className="upload-mode-note">Demonstration mode bypasses external OCR/AI only where configured. Validation, persistence, review, approval and audit remain real.</p>}
+                </fieldset>
               )}
-            </div>
-          )}
-          {validation && (
-            <div className="panel">
-              <div className="panel-head">
-                <div>
-                  <h2>Validation: {validation.status}</h2>
+              <div className="upload-notice"><span aria-hidden="true">◆</span><p><strong>Integrity notice:</strong> uploaded bytes are revalidated by the backend and the stored document receives an audit-preserving checksum.</p></div>
+              {uploading && <div className="progressbar" role="progressbar" aria-label="Uploading document"><div className="progressbar-indet" /></div>}
+              {!doc ? (
+                <div className="upload-control-actions">
+                  <Button type="button" variant="secondary" onClick={cancel}>{uploading ? "Cancel upload" : "Clear"}</Button>
+                  <Button type="submit" variant="primary" disabled={!file || uploading}>{uploading ? "Uploading…" : "Start pipeline processing →"}</Button>
                 </div>
-              </div>
-              {validation.issues.length === 0 && <EmptyState title="No issues">All deterministic checks passed.</EmptyState>}
-              {validation.issues.length > 0 && <ValidationSummary status={validation.status} issues={validation.issues} />}
-            </div>
-          )}
+              ) : (
+                <div className="upload-control-actions upload-control-actions-wrap">
+                  <Button type="button" variant="secondary" onClick={refresh}>Refresh status</Button>
+                  <Button type="button" variant="secondary" onClick={loadResults} disabled={resultsLoading}>{resultsLoading ? "Loading…" : "Load extraction + validation"}</Button>
+                  {watching && <span className="upload-watching">Auto-refreshing status…</span>}
+                </div>
+              )}
+            </form>
+          </section>
+
+          {doc && error && <div className="upload-inline-alert"><Alert tone="error" title="Processing note">{error}</Alert></div>}
+          {doc && resultsLoading && !extraction && <section className="upload-card upload-results-card"><Skeleton lines={4} /></section>}
+          {doc && resultsError && !extraction && <section className="upload-card upload-results-card"><ErrorState title="Results unavailable" message={resultsError} requestId={resultsRef || undefined} onRetry={loadResults} /></section>}
+          {extraction && <section className="upload-card upload-results-card"><header className="upload-card-header"><h2>Extracted fields ({extraction.fields.length})</h2></header><div className="upload-results-body"><DataTable columns={["Field", "Value", "Confidence"]}>{extraction.fields.map((field) => <tr key={field.field_name}><td><code>{field.field_name}</code></td><td>{field.value === null ? <span className="muted">Not found</span> : String(field.value)}</td><td><ConfidenceBadge value={field.confidence} /></td></tr>)}</DataTable>{extraction.record_id && <p><a href={`#/record/${extraction.record_id}`}>Open record {extraction.record_id.slice(0, 8)}…</a></p>}</div></section>}
+          {validation && <section className="upload-card upload-results-card"><header className="upload-card-header"><h2>Validation: {validation.status}</h2></header><div className="upload-results-body">{validation.issues.length === 0 ? <EmptyState title="No issues">All deterministic checks passed.</EmptyState> : <ValidationSummary status={validation.status} issues={validation.issues} />}</div></section>}
         </div>
-      )}
+      </div>
+
+      <section className="upload-card upload-log-card">
+        <header className="upload-card-header"><h2><span aria-hidden="true">↶</span> Recent ingestion log</h2><a href="#/audit">Full audit log ↗</a></header>
+        <div className="upload-log-wrap">
+          <table className="upload-log-table"><thead><tr><th>Instrument file name</th><th>Document ID</th><th>Storage / workflow status</th><th>Ingestion timestamp</th><th>Integrity</th><th>Audit trail</th></tr></thead><tbody>
+            {doc ? <tr><td><span className="upload-file-glyph" aria-hidden="true">▧</span> {doc.file_name}</td><td><code>{doc.id.slice(0, 12)}…</code></td><td><StatusBadge tone={statusTone(status)}>{statusLabel(status)}</StatusBadge></td><td><code>{doc.uploaded_at ? new Date(doc.uploaded_at).toLocaleString() : "—"}</code></td><td><span className="upload-log-integrity">✓ SHA-256 stored</span></td><td><a href={`#/record/${doc.id}/audit`}>View dossier</a></td></tr> : <tr><td colSpan="6" className="upload-log-empty">No completed ingestion in this session. Select a supported source document to begin.</td></tr>}
+          </tbody></table>
+        </div>
+      </section>
     </div>
   );
 }

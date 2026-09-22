@@ -33,3 +33,9 @@ tessdata/*.traineddata
 
 # Local/unrelated files
 Videos/
+
+# Local/generated tooling
+.vite/
+.codex/stitch-reference/
+.codex/stitch-site-one-2/
+.codex/stitch-source/

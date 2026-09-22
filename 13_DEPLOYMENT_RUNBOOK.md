@@ -65,14 +65,14 @@ Do not mix production secrets with development configuration.
 Implemented set (see root `.env.example`; placeholders only, never values):
 
 ```text
-SUPABASE_URL / SUPABASE_ANON_KEY / SUPABASE_SERVICE_ROLE_KEY / DATABASE_URL
+SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY
 AUTH_SECRET / AUTH_TOKEN_EXPIRE_MINUTES
-STORAGE_URL / STORAGE_BUCKET / MAX_UPLOAD_MB
-GEMINI_API_KEY / OPENROUTER_API_KEY / NVIDIA_API_KEY / GROQ_API_KEY
+STORAGE_BUCKET / MAX_UPLOAD_MB
+GEMINI_API_KEY / OPENROUTER_API_KEY
 AI_PROVIDER / AI_MODEL / AI_TIMEOUT_SECONDS / AI_FALLBACKS
 AI_CACHE_ENABLED / AI_CACHE_TTL_SECONDS / AI_CACHE_MAX_ENTRIES
 ENVIRONMENT / FRONTEND_ORIGINS / LOG_LEVEL
-DEMO_MODE (flag only — Demo Mode behavior is NOT implemented, see §14)
+DEMO_MODE (server-side flag; use true only for a labelled fixture-backed demo)
 ```
 
 Actual values must never be committed. The ignored local `opencode.json` may
@@ -342,10 +342,9 @@ without destroying audit history.
 
 # 14. Demo Mode
 
-> Status (2026-09-05): NOT IMPLEMENTED. Only the `DEMO_MODE`/`AI_CACHE_*`
-> configuration flags exist; no demo-serving behavior reads them. Do not
-> claim Demo Mode readiness until this section is implemented and labeled
-> per the rules below.
+Status: implemented as a controlled, fixture-backed demonstration path. It
+replays known OCR/extraction output and keeps validation, persistence, review,
+approval, and audit real. It never claims that an external AI request ran.
 
 Demo mode is an emergency reliability mechanism.
 

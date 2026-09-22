@@ -1,0 +1,17 @@
+.git
+.gitignore
+.env
+**/.env
+backend/.venv
+frontend
+dataset
+Videos
+*.md
+**/__pycache__
+**/*.pyc
+ai/.venv
+ai/**/benchmark*.py
+backend/tests
+backend/scripts
+stitch-reference
+.codex

@@ -45,6 +45,14 @@ def find_binary() -> str:
     return "tesseract"  # let pytesseract raise its own descriptive error
 
 
+def binary_available() -> bool:
+    """Return whether the configured Tesseract executable is discoverable."""
+    binary = find_binary()
+    if os.path.isabs(binary):
+        return os.path.isfile(binary)
+    return shutil.which(binary) is not None
+
+
 def engine_version() -> str:
     import pytesseract
 

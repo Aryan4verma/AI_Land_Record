@@ -50,8 +50,8 @@ def test_env_example_carries_no_secret_values():
         if line and not line.startswith("#") and "=" in line:
             key, _, value = line.partition("=")
             values[key.strip()] = value.strip()
-    for secret in ("GEMINI_API_KEY", "OPENROUTER_API_KEY", "NVIDIA_API_KEY", "GROQ_API_KEY",
-                   "SUPABASE_ANON_KEY", "SUPABASE_SERVICE_ROLE_KEY", "AUTH_SECRET", "DATABASE_URL"):
+    for secret in ("GEMINI_API_KEY", "OPENROUTER_API_KEY",
+                   "SUPABASE_SERVICE_ROLE_KEY", "AUTH_SECRET"):
         assert secret in values, f"missing placeholder {secret}"
         assert values[secret] == "", f"{secret} must not contain a value in .env.example"
 

@@ -11,6 +11,52 @@ _IMAGE_SUFFIXES = {".png", ".jpg", ".jpeg", ".tif", ".tiff"}
 _MAX_RENDER_PIXELS = 20_000_000
 
 
+def _scaled_pdf_matrix(page, dpi: int):
+    """Keep one rasterized page below the hosted-memory pixel budget."""
+    import pymupdf
+
+    scale = dpi / 72.0
+    width = max(float(page.rect.width) * scale, 1.0)
+    height = max(float(page.rect.height) * scale, 1.0)
+    pixels = width * height
+    if pixels > _MAX_RENDER_PIXELS:
+        scale *= (_MAX_RENDER_PIXELS / pixels) ** 0.5
+    return pymupdf.Matrix(scale, scale)
+
+
+def _bounded_image(image: Image.Image) -> Image.Image:
+    """Return an RGB image within the raster budget without dropping a page."""
+    rgb = image.convert("RGB")
+    pixels = rgb.width * rgb.height
+    if pixels <= _MAX_RENDER_PIXELS:
+        return rgb
+    factor = (_MAX_RENDER_PIXELS / pixels) ** 0.5
+    resized = rgb.resize(
+        (max(1, int(rgb.width * factor)), max(1, int(rgb.height * factor))),
+        Image.Resampling.LANCZOS,
+    )
+    rgb.close()
+    return resized
+
+
+def iter_pages_from_bytes(data: bytes, suffix: str, dpi: int = 300):
+    """Yield pages one at a time so multi-page jobs do not retain all rasters."""
+    suffix = suffix.lower()
+    if suffix in _PDF_SUFFIXES:
+        import pymupdf
+
+        with pymupdf.open(stream=data, filetype="pdf") as doc:
+            for page in doc:
+                pix = page.get_pixmap(matrix=_scaled_pdf_matrix(page, dpi), alpha=False)
+                yield Image.frombytes("RGB", (pix.width, pix.height), pix.samples)
+        return
+    if suffix in _IMAGE_SUFFIXES:
+        with Image.open(io.BytesIO(data)) as image:
+            yield _bounded_image(image)
+        return
+    raise ValueError(f"unsupported file type: {suffix}")
+
+
 class PageNotFoundError(ValueError):
     """The requested 1-based page is outside the source document."""
 
@@ -39,20 +85,7 @@ def load_pages(path: str | Path, dpi: int = 300) -> list[Image.Image]:
 
 def load_pages_from_bytes(data: bytes, suffix: str, dpi: int = 300) -> list[Image.Image]:
     """Same as load_pages but from in-memory bytes (pipeline downloads)."""
-    suffix = suffix.lower()
-    if suffix in _PDF_SUFFIXES:
-        import pymupdf
-
-        images: list[Image.Image] = []
-        with pymupdf.open(stream=data, filetype="pdf") as doc:
-            for page in doc:
-                pix = page.get_pixmap(dpi=dpi)
-                images.append(Image.frombytes("RGB", (pix.width, pix.height), pix.samples))
-        return images
-    if suffix in _IMAGE_SUFFIXES:
-        with Image.open(io.BytesIO(data)) as img:
-            return [img.convert("RGB")]
-    raise ValueError(f"unsupported file type: {suffix}")
+    return list(iter_pages_from_bytes(data, suffix, dpi=dpi))
 
 
 def render_page_from_bytes(data: bytes, suffix: str, page_number: int,

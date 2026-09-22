@@ -50,8 +50,8 @@ function summaryRows(byName, doc, validation, reviewText) {
 /** Extraction result (route #/document/:id/extract) — Stitch a21c29e7
  * two-pane workspace on real endpoints. Values, confidence, and validation
  * render backend data verbatim; "View evidence" appears only for fields
- * carrying actual OCR evidence; the viewer shows real metadata because no
- * file-download endpoint exists. Actions route to existing workflows only.
+ * carrying actual OCR evidence; the source pane renders through the private
+ * authenticated page endpoint. Actions route to existing workflows only.
  */
 export default function DocumentExtraction({ documentId }) {
   const [doc, setDoc] = useState(null);

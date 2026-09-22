@@ -8,7 +8,7 @@
   align-items: center;
   justify-content: center;
   gap: var(--space-sm);
-  height: 2.75rem;
+  height: 2.25rem;
   padding: 0 var(--space-base);
   font-size: var(--text-body-md);
   font-weight: 500;
@@ -75,7 +75,8 @@
   display: block;
   width: 100%;
   box-sizing: border-box;
-  padding: 0.625rem 0.875rem;
+  min-height: 2.125rem;
+  padding: 0.375rem 0.75rem;
   font-size: var(--text-body-md);
   color: var(--ink);
   background: var(--surface);
@@ -349,7 +350,7 @@
 .stat-link:focus-visible .stat-go { opacity: 1; transform: none; }
 .stat-go svg { width: 100%; height: 100%; }
 
-/* ---- DataTable (Stitch §Components.5: 36px rows, 32px header, no striping) ---- */
+/* ---- DataTable (Stitch §Components.5: 36px rows, 32px header, light striping) ---- */
 .dtable-scroll { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--r-md); background: var(--surface); }
 .dtable { width: 100%; border-collapse: collapse; font-size: var(--text-body-md); }
 .dtable-caption { text-align: left; padding: var(--space-sm) var(--space-md); color: var(--muted); font-size: var(--text-body-sm); }
@@ -373,14 +374,15 @@
   vertical-align: middle;
 }
 .dtable tbody tr:last-child td { border-bottom: none; }
-.dtable tbody tr:hover { background: var(--bg-canvas); }
+.dtable tbody tr:nth-child(even) { background: var(--bg-canvas); }
+.dtable tbody tr:hover { background: var(--surface-muted); }
 .dtable .tnum { font-size: var(--text-body-md); }
 
 /* ---- Panel (section card) ---- */
 .panel {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: var(--r-md);
+  border-radius: var(--r-sm);
   box-shadow: var(--shadow-1);
   padding: var(--space-lg);
   min-width: 0;
@@ -433,7 +435,7 @@
   margin-bottom: var(--space-base);
 }
 @media (min-width: 768px) {
-  .filterbar { grid-template-columns: 1.2fr 1.2fr 1fr auto; }
+  .filterbar { grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr)); }
   .filterbar .field { margin: 0; }
 }.panel-head {
   display: flex;
@@ -442,6 +444,8 @@
   justify-content: space-between;
   gap: var(--space-sm);
   margin-bottom: var(--space-base);
+  padding-bottom: var(--space-md);
+  border-bottom: 1px solid var(--border);
 }
 .panel-head h2, .panel-head h3 { margin: 0; }
 .panel-sub { margin: 2px 0 0; font-size: var(--text-body-sm); color: var(--muted); }

@@ -73,7 +73,7 @@ class SupabaseJobStore:
         try:
             result = (
                 self.client.table("processing_jobs")
-                .select("id,status,error_code,started_at,completed_at")
+                .select("id,status,error_code,error_message,started_at,completed_at")
                 .eq("document_id", document_id)
                 .order("created_at", desc=True)
                 .order("id", desc=True)

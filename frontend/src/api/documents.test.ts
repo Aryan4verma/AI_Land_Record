@@ -21,7 +21,7 @@ const sessionStorageStub = memoryStorage();
 vi.stubGlobal("localStorage", localStorageStub);
 vi.stubGlobal("sessionStorage", sessionStorageStub);
 
-const { searchRecords } = await import("./client.js");
+const { getDocumentPage, searchRecords } = await import("./client.js");
 const { confidenceTone } = await import("./types.js");
 
 function jsonResponse(status: number, body: unknown) {
@@ -70,6 +70,24 @@ describe("documents search/filter/pagination wiring", () => {
     const result = await searchRecords({ page: 3, limit: 20 });
     expect(seen[0]).toContain("page=3");
     expect(result.total).toBe(55);
+  });
+});
+
+describe("private document page wiring", () => {
+  it("requests an authenticated rendered source page and returns the image blob", async () => {
+    sessionStorageStub.setItem("qa_token", "token-for-test");
+    const seen: Array<{ url: string; auth: string | null }> = [];
+    const blob = new Blob(["jpeg"], { type: "image/jpeg" });
+    vi.stubGlobal("fetch", async (url: string, init: RequestInit) => {
+      seen.push({ url: String(url), auth: new Headers(init.headers).get("Authorization") });
+      return { ok: true, status: 200, blob: async () => blob };
+    });
+
+    await expect(getDocumentPage("doc-1", 2)).resolves.toBe(blob);
+    expect(seen).toEqual([{
+      url: expect.stringContaining("/api/v1/documents/doc-1/pages/2"),
+      auth: "Bearer token-for-test",
+    }]);
   });
 });
 

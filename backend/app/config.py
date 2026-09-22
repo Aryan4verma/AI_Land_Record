@@ -35,12 +35,12 @@ class Settings(BaseSettings):
     max_upload_mb: int = Field(default=10, ge=1, le=100)
 
     ai_provider: str = "gemini"
-    ai_model: str = "gemini-2.0-flash"
+    ai_model: str = "gemini-2.5-flash-lite"
     ai_timeout_seconds: int = 60
     gemini_api_key: str = ""
     openrouter_api_key: str = ""
     # Comma-separated "provider:model" fallback routes, e.g.
-    # "gemini:gemini-2.0-flash,openrouter:meta-llama/llama-3.3-70b-instruct".
+    # "openrouter:openrouter/free" keeps the demo on OpenRouter's free router.
     ai_fallbacks: str = ""
     ai_cache_enabled: bool = True
     ai_cache_ttl_seconds: int = 3600

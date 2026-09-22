@@ -99,12 +99,16 @@ def run_pipeline(job_id: str, document_id: str, deps: PipelineDeps) -> None:
     try:
         _run(job_id, document_id, deps, jobs, documents, records, reviews, audits)
     except PipelineFail as exc:
+        log.exception(
+            "pipeline failed: job_id=%s document_id=%s code=%s",
+            job_id, document_id, exc.code,
+        )
         _fail(jobs, documents, audits, job_id, document_id, deps.requesting_user_id,
               exc.code, exc.message)
     except Exception as exc:  # noqa: BLE001 — last-resort guard, type only in logs
-        log.exception("pipeline crashed")
+        log.exception("pipeline crashed: job_id=%s document_id=%s", job_id, document_id)
         _fail(jobs, documents, audits, job_id, document_id, deps.requesting_user_id,
-              "PIPELINE_ERROR", f"Unexpected pipeline failure ({type(exc).__name__}).")
+              "PIPELINE_ERROR", "Unexpected processing failure.")
 
 
 def _fail(jobs: Any, documents: Any, audits: Any, job_id: str, document_id: str,
@@ -139,8 +143,10 @@ def _run(job_id: str, document_id: str, deps: PipelineDeps,
     try:
         raw = storage.download(document["storage_path"])
     except Exception as exc:
-        raise PipelineFail("STORAGE_DOWNLOAD_FAILED",
-                           f"Could not fetch source bytes ({type(exc).__name__}).") from exc
+        raise PipelineFail(
+            "STORAGE_DOWNLOAD_FAILED",
+            "Could not retrieve the source document from private storage.",
+        ) from exc
 
     pages = _ocr(raw, document.get("file_name", ""), deps, document.get("language"))
     ocr_text = "\n".join(page.text for page in pages)
@@ -176,30 +182,50 @@ def _run(job_id: str, document_id: str, deps: PipelineDeps,
 
 
 def _ocr(raw: bytes, file_name: str, deps: PipelineDeps, declared_language: object = None) -> list:
-    from ai.ocr.pdf_render import load_pages_from_bytes
+    from ai.ocr.pdf_render import iter_pages_from_bytes
 
     suffix = Path(file_name or "").suffix.lower() or ".pdf"
     try:
-        images = load_pages_from_bytes(raw, suffix, dpi=deps.dpi)
+        images = iter_pages_from_bytes(raw, suffix, dpi=deps.dpi)
     except ValueError as exc:
         raise PipelineFail("UNSUPPORTED_FILE_TYPE", str(exc)) from exc
     except Exception as exc:
         raise PipelineFail("RENDER_FAILED", f"Could not render pages ({type(exc).__name__}).") from exc
     ocr_engine = deps.ocr_engine
     if ocr_engine is None:
-        from ai.ocr.tesseract_adapter import TesseractOcrEngine
+        from ai.ocr.tesseract_adapter import TesseractOcrEngine, binary_available
+
+        if not binary_available():
+            raise PipelineFail(
+                "OCR_ENGINE_UNAVAILABLE",
+                "The server OCR engine is unavailable. Install Tesseract or configure TESSERACT_CMD.",
+            )
 
         # language=None -> detect the script per page (Latin / Devanagari /
         # Gujarati). The uploader's declared language is only a fallback when
         # detection has no opinion; it is never trusted over the page itself.
         ocr_engine = TesseractOcrEngine(language=None, declared=declared_language)
     pages = []
-    for number, image in enumerate(images, start=1):
-        try:
-            page, _elapsed = ocr_engine.read_image(image, page_number=number)
-        except Exception as exc:
-            raise PipelineFail("OCR_FAILED", f"OCR failed on page {number} ({type(exc).__name__}).") from exc
-        pages.append(page)
+    try:
+        for number, image in enumerate(images, start=1):
+            try:
+                page, _elapsed = ocr_engine.read_image(image, page_number=number)
+            except Exception as exc:
+                if type(exc).__name__ == "TesseractNotFoundError":
+                    raise PipelineFail(
+                        "OCR_ENGINE_UNAVAILABLE",
+                        "The server OCR engine is unavailable. Install Tesseract or configure TESSERACT_CMD.",
+                    ) from exc
+                raise PipelineFail("OCR_FAILED", f"OCR failed on page {number}.") from exc
+            pages.append(page)
+    except PipelineFail:
+        raise
+    except ValueError as exc:
+        code = "UNSUPPORTED_FILE_TYPE" if suffix not in {".pdf", ".png", ".jpg", ".jpeg", ".tif", ".tiff"} else "RENDER_FAILED"
+        message = str(exc) if code == "UNSUPPORTED_FILE_TYPE" else "Could not render document pages."
+        raise PipelineFail(code, message) from exc
+    except Exception as exc:
+        raise PipelineFail("RENDER_FAILED", "Could not render document pages.") from exc
     if not any(page.text.strip() for page in pages):
         raise PipelineFail("OCR_FAILED", "OCR produced no text on any page.")
     return pages
@@ -298,5 +324,5 @@ def _persist(job_id: str, records: Any, document: dict, pages: list, result: Any
     except AppError as exc:
         raise PipelineFail(exc.code, exc.message) from exc
     except Exception as exc:
-        raise PipelineFail("PERSIST_FAILED", f"Could not commit processing result ({type(exc).__name__}).") from exc
+        raise PipelineFail("PERSIST_FAILED", "Could not commit the processing result.") from exc
     return str(committed["record_id"]), dropped

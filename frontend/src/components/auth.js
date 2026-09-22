@@ -1,3 +1,32 @@
+import { isOperator } from "./roles.js";
+
+/** Login identifier validation follows the current API contract: both
+ * operator and read-only accounts authenticate with their registered email.
+ * The backend role remains authoritative after authentication.
+ */
+export function validateLoginIdentifier(identifier, selectedRole) {
+  const value = (identifier || "").trim();
+  if (!value) {
+    return selectedRole === "public"
+      ? "Enter the email used for your read-only account."
+      : "Enter your official email address.";
+  }
+  if (!value.includes("@")) {
+    return selectedRole === "public"
+      ? "Enter the email used for your read-only account."
+      : "Enter a valid official email address.";
+  }
+  return "";
+}
+
+/** Maps the selected presentation intent to the authenticated backend role. */
+export function loginRoleMatches(selectedRole, user) {
+  const role = String(user?.role || "").trim().toLowerCase();
+  return selectedRole === "officer"
+    ? isOperator({ role })
+    : role === "user";
+}
+
 /** Registration form validation. Pure field checks with the exact
  * user-facing messages; the backend re-validates everything and stays
  * authoritative (422/409 map to the same texts in the view).

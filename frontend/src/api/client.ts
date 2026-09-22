@@ -218,6 +218,29 @@ async function request<T>(path: string, { method = "GET", body, form, auth = tru
   return data as T;
 }
 
+/** Fetch a privately rendered document page without treating the image body as JSON. */
+async function requestBlob(path: string, { auth = true, signal }: RequestOptions = {}): Promise<Blob> {
+  const headers: Record<string, string> = {};
+  if (auth) headers["Authorization"] = "Bearer " + getToken();
+  const res = await fetch(getApiUrl() + path, { method: "GET", headers, signal });
+  if (!res.ok) {
+    const data: unknown = await res.json().catch(() => ({}));
+    const err = (data as { error?: Partial<ApiErrorBody> }).error || {};
+    const apiError = new ApiError(res.status, err);
+    if (
+      res.status === 401 &&
+      hadSession() &&
+      SESSION_DEAD_CODES.has(apiError.code) &&
+      sessionExpiredHandler
+    ) {
+      clearSession();
+      sessionExpiredHandler();
+    }
+    throw apiError;
+  }
+  return res.blob();
+}
+
 /* ---- auth ---- */
 
 export function login(credentials: LoginRequest): Promise<TokenResponse> {
@@ -253,6 +276,10 @@ export function getDocument(documentId: string, opts?: CallOptions): Promise<Doc
 
 export function getDocumentStatus(documentId: string, opts?: CallOptions): Promise<DocumentStatus> {
   return request<DocumentStatus>(`/api/v1/documents/${documentId}/status`, opts);
+}
+
+export function getDocumentPage(documentId: string, pageNumber: number, opts?: CallOptions): Promise<Blob> {
+  return requestBlob(`/api/v1/documents/${documentId}/pages/${pageNumber}`, opts);
 }
 
 /** Start processing. `mode` selects the OCR/extraction source only — every

@@ -22,7 +22,7 @@ vi.stubGlobal("localStorage", localStorageStub);
 vi.stubGlobal("sessionStorage", sessionStorageStub);
 
 const { registerAccount } = await import("./client.js");
-const { mapRegistrationError, validateRegistration } = await import("../components/auth.js");
+const { loginRoleMatches, mapRegistrationError, validateLoginIdentifier, validateRegistration } = await import("../components/auth.js");
 
 function jsonResponse(status: number, body: unknown) {
   return { ok: status >= 200 && status < 300, status, json: async () => body };
@@ -37,6 +37,26 @@ beforeEach(() => {
 });
 
 const VALID = { name: "Asha", idNumber: "ID-1", email: "a@b.co", password: "password-42", confirm: "password-42" };
+
+describe("role-specific login validation", () => {
+  it("requires the current email identifier contract for either access type", () => {
+    expect(validateLoginIdentifier("", "officer")).toContain("official email");
+    expect(validateLoginIdentifier("not-an-email", "officer")).toContain("valid official email");
+    expect(validateLoginIdentifier("", "public")).toContain("read-only account");
+    expect(validateLoginIdentifier("not-an-email", "public")).toContain("read-only account");
+    expect(validateLoginIdentifier("operator@example.gov", "officer")).toBe("");
+    expect(validateLoginIdentifier("citizen@example.com", "public")).toBe("");
+  });
+
+  it("accepts only the matching authenticated backend role", () => {
+    expect(loginRoleMatches("officer", { role: "operator" })).toBe(true);
+    expect(loginRoleMatches("officer", { role: "admin" })).toBe(true);
+    expect(loginRoleMatches("officer", { role: "user" })).toBe(false);
+    expect(loginRoleMatches("public", { role: "user" })).toBe(true);
+    expect(loginRoleMatches("public", { role: "operator" })).toBe(false);
+    expect(loginRoleMatches("public", { role: "admin" })).toBe(false);
+  });
+});
 
 describe("validateRegistration (exact user-facing messages)", () => {
   it("accepts a complete valid form", () => {

@@ -418,6 +418,38 @@ def test_pipeline_ocr_failure_marks_failed(world):
     assert not [e for e in world["audits"].entries if e["action"] == "PROCESSING_COMPLETED"]
 
 
+def test_missing_tesseract_is_classified_and_remains_retryable(world, monkeypatch):
+    """A missing local OCR executable is not reported as an opaque pipeline crash."""
+    monkeypatch.setattr("ai.ocr.tesseract_adapter.binary_available", lambda: False)
+    docs, jobs, records, reviews, audits = (world["docs"], world["jobs"], world["records"],
+                                            world["reviews"], world["audits"])
+    monkeypatch.setattr(
+        pipeline_module, "_store_factory",
+        lambda client: (jobs, docs, records, reviews, audits),
+    )
+    job = jobs.create_job({"document_id": DOC_ID, "status": "PENDING", "pipeline_version": "v1"})
+
+    run_pipeline(job["id"], DOC_ID, PipelineDeps(
+        client=None,
+        requesting_user_id="user-1",
+        storage=StubStorage(),
+        reference=demo_reference(),
+    ))
+
+    finished = jobs.get_job(job["id"])
+    assert finished["status"] == "FAILED"
+    assert finished["error_code"] == "OCR_ENGINE_UNAVAILABLE"
+    assert finished["error_message"].startswith("The server OCR engine is unavailable.")
+    assert docs.doc["processing_status"] == "FAILED"
+    assert records.records == {}
+    assert reviews.tasks == {}
+    assert any(
+        entry["action"] == "PROCESSING_FAILED"
+        and entry["metadata"]["error_code"] == "OCR_ENGINE_UNAVAILABLE"
+        for entry in audits.entries
+    )
+
+
 @pytest.mark.parametrize("stage", ["ocr", "record", "fields", "validation", "audit"])
 def test_atomic_result_failure_leaves_no_partial_business_data(world, stage):
     """Every final-persistence failure rolls back the complete result unit."""
@@ -573,6 +605,7 @@ def test_status_reports_latest_job_diagnostics_without_changing_document_state(c
     docs.doc["processing_status"] = "FAILED"
     job = jobs.create_job({"document_id": DOC_ID, "status": "FAILED",
                            "pipeline_version": "v1", "error_code": "OCR_FAILED",
+                           "error_message": "OCR failed on page 1.",
                            "started_at": NOW, "completed_at": NOW})
     app.dependency_overrides[get_document_store] = lambda: docs
     app.dependency_overrides[get_job_store] = lambda: jobs
@@ -586,6 +619,7 @@ def test_status_reports_latest_job_diagnostics_without_changing_document_state(c
             "job_id": job["id"],
             "job_status": "FAILED",
             "error_code": "OCR_FAILED",
+            "error_message": "OCR failed on page 1.",
             "started_at": "2026-09-04T00:00:00Z",
             "completed_at": "2026-09-04T00:00:00Z",
         }

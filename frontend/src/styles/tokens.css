@@ -1,21 +1,24 @@
-/* Design tokens — Government Intelligence Workspace (Stitch project
- * 5026128240319690003, "Government Intelligence Workspace - Master Design
- * System"). Values transcribed from the Stitch designMd + Login screen theme.
+/* Design tokens — Sovereign Cadastre Intelligence (Stitch project
+ * 15783984513634451049, "Bhoomi Intel Land Console"). Values follow the
+ * project design-system metadata and are shared by every authenticated view.
  * Single source of truth for all frontend styling; views/components must use
  * these variables, never hardcoded hex.
  */
 :root {
   /* Structural navy scale (Stitch tailwind config) */
-  --navy-950: #070c18;
+  --navy-950: #0b1325;
   --navy-900: #0f172a;
   --navy-850: #15203b;
   --navy-800: #1e293b;
   --navy-700: #334155;
+  --navy-400: #64748b;
+  --navy-300: #94a3b8;
+  --navy-200: #cbd5e1;
 
   /* Canvas & surfaces */
   --bg-canvas: #f8fafc;
-  --surface: #ffffff;
-  --surface-muted: #f1f5f9;
+  --surface: #faf8ff;
+  --surface-muted: #f2f3ff;
   --border: #e2e8f0;
   --border-strong: #cbd5e1;
   --border-input: #cbd5e1;
@@ -27,20 +30,20 @@
   --placeholder: #94a3b8;
 
   /* Interactive accent (restrained steel blue, affordances only) */
-  --accent: #0284c7;
-  --accent-strong: #0369a1;
+  --accent: #2563eb;
+  --accent-strong: #1d4ed8;
 
   /* Semantic tiers: ink / fill / boundary (Stitch spec) */
-  --verified-ink: #059669;
+  --verified-ink: #065f46;
   --verified-fill: #ecfdf5;
   --verified-border: #a7f3d0;
-  --review-ink: #d97706;
-  --review-fill: #fffbeb;
+  --review-ink: #92400e;
+  --review-fill: #fef3c7;
   --review-border: #fde68a;
   --failed-ink: #dc2626;
   --failed-fill: #fef2f2;
   --failed-border: #fecaca;
-  --processing-ink: #2563eb;
+  --processing-ink: #1d4ed8;
   --processing-fill: #eff6ff;
   --processing-border: #bfdbfe;
   --error: #ba1a1a;
@@ -49,8 +52,8 @@
   /* Typography (Inter everywhere; JetBrains Mono for tabular/IDs) */
   --font-sans: "Inter", -apple-system, "BlinkMacSystemFont", "Segoe UI", "Roboto", sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
-  --text-headline-lg: 30px;
-  --lh-headline-lg: 38px;
+  --text-headline-lg: 28px;
+  --lh-headline-lg: 36px;
   --text-headline-md: 20px;
   --lh-headline-md: 28px;
   --text-headline-sm: 16px;
@@ -85,14 +88,14 @@
   --tracking-normal: 0;
   --tracking-eyebrow: 0.06em;
 
-  /* Spacing (8px base) + shell dimensions */
+  /* Spacing (4px base) + shell dimensions */
   --space-2xs: 0.125rem;
   --space-xs: 0.25rem;
   --space-sm: 0.5rem;
   --space-md: 0.75rem;
   --space-base: 1rem;
-  --space-lg: 1.5rem;
-  --space-xl: 2rem;
+  --space-lg: 1.25rem;
+  --space-xl: 1.75rem;
   --space-2xl: 2.5rem;
   --gutter-sidebar: 16rem;
   --header-height: 3.5rem;

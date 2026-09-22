@@ -75,6 +75,7 @@ export interface DocumentStatus {
   job_id?: string | null;
   job_status?: string | null;
   error_code?: string | null;
+  error_message?: string | null;
   started_at?: string | null;
   completed_at?: string | null;
 }
@@ -330,7 +331,7 @@ export function resultBanner(
  * "active" group and per-stage durations are never shown. Terminal and
  * failure flags drive the success/failure panels and polling stop.
  */
-export type StepState = "done" | "active" | "queued" | "failed";
+export type StepState = "done" | "active" | "queued" | "failed" | "unknown";
 
 export interface PipelineStep {
   key: string;
@@ -358,15 +359,34 @@ const PIPELINE_LABELS: [string, string][] = [
 const TERMINAL_GOOD = new Set(["REVIEW_REQUIRED", "READY_FOR_APPROVAL", "APPROVED", "REJECTED"]);
 const TERMINAL_FAILED = new Set(["VALIDATION_FAILED", "FAILED"]);
 
-export function processingSteps(status: string): PipelineView {
+/** Return the known zero-based stage for a failure, or null when the backend
+ * only supplied an aggregate FAILED state. Unknown stages must never be
+ * presented as failed by inference.
+ */
+function failureStageIndex(status: string, errorCode: string): number | null {
+  if (status === "VALIDATION_FAILED") return 5;
+  if (["OCR_FAILED", "OCR_ENGINE_UNAVAILABLE"].includes(errorCode)) return 2;
+  if (["RENDER_FAILED", "UNSUPPORTED_FILE_TYPE"].includes(errorCode)) return 1;
+  if (errorCode.startsWith("PROVIDER_")) return 4;
+  return null;
+}
+
+export function processingSteps(status: string, errorCode = ""): PipelineView {
   const normalized = (status || "").toUpperCase();
+  const normalizedError = (errorCode || "").toUpperCase();
   const failed = TERMINAL_FAILED.has(normalized);
   const good = TERMINAL_GOOD.has(normalized);
   const running = normalized === "PROCESSING" || normalized === "EXTRACTED";
+  const knownFailure = failureStageIndex(normalized, normalizedError);
   const steps = PIPELINE_LABELS.map(([key, label], i) => {
     let state: StepState = "queued";
     if (good) state = "done";
-    else if (failed) state = i === 0 ? "done" : i <= 4 ? "failed" : "queued";
+    else if (failed) {
+      if (knownFailure === null) state = i === 0 ? "done" : "unknown";
+      else if (i < knownFailure) state = "done";
+      else if (i === knownFailure) state = "failed";
+      else state = "unknown";
+    }
     else if (i === 0) state = "done";
     else if (running && i <= 4) state = "active";
     return { key, label, state };

@@ -1,11 +1,11 @@
 import { useState } from "react";
 import Alert from "../components/Alert.jsx";
 import Button from "../components/Button.jsx";
-import TextInput from "../components/TextInput.jsx";
-import { getMe, login, setToken, setUser } from "../api/client";
+import { getMe, login, logout, setToken, setUser } from "../api/client";
+import { loginRoleMatches, validateLoginIdentifier } from "../components/auth.js";
 import "../styles/login.css";
 
-/** Stitch Login (1a3bd1dbc5a14deda00bd6d93824e86a) on the existing auth
+/** Stitch Login (6d3155c51cfb4bea8d5b5ca7043ed57a) on the existing auth
  * contract: POST /api/v1/auth/login {email, password} -> {access_token}.
  * No forgot-password / remember-me: the backend exposes neither, so the
  * screen omits them instead of faking them.
@@ -18,6 +18,9 @@ export default function Login({ onLogin }) {
   const [passwordError, setPasswordError] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  // Presentation-only intent. The authenticated user's real role still
+  // comes from the existing backend response after login.
+  const [selectedRole, setSelectedRole] = useState("officer");
   // One-shot notice after registration (flag set by #/sign-in, cleared here).
   const [registered] = useState(() => {
     try {
@@ -35,15 +38,9 @@ export default function Login({ onLogin }) {
     setError("");
     const trimmedEmail = email.trim();
     let valid = true;
-    if (!trimmedEmail) {
-      setEmailError("Enter your official email address.");
-      valid = false;
-    } else if (!trimmedEmail.includes("@")) {
-      setEmailError("Enter a valid email address.");
-      valid = false;
-    } else {
-      setEmailError("");
-    }
+    const identifierError = validateLoginIdentifier(trimmedEmail, selectedRole);
+    setEmailError(identifierError);
+    if (identifierError) valid = false;
     if (!password) {
       setPasswordError("Enter your password.");
       valid = false;
@@ -60,6 +57,12 @@ export default function Login({ onLogin }) {
       const data = await login({ email: trimmedEmail, password });
       setToken(data.access_token);
       const me = await getMe();
+      if (!loginRoleMatches(selectedRole, me)) {
+        await logout();
+        setEmailError("");
+        setError("This account does not match the selected access type.");
+        return;
+      }
       setUser(me);
       onLogin(me);
     } catch (err) {
@@ -72,153 +75,187 @@ export default function Login({ onLogin }) {
   }
 
   return (
-    <div className="login">
-      <section className="login-brand" aria-label="Land Record Intelligence">
-        <div className="login-brand-grid bg-cadastral-grid" aria-hidden="true" />
-        <svg className="login-brand-vectors" viewBox="0 0 600 800" preserveAspectRatio="none" aria-hidden="true">
-          <polygon points="80,140 240,110 320,230 140,280" fill="none" stroke="#94A3B8" strokeWidth="1" strokeDasharray="4 4" />
-          <polygon points="240,110 490,80 540,240 320,230" fill="rgba(37,99,235,0.03)" stroke="#94A3B8" strokeWidth="1.2" />
-          <polygon points="140,280 320,230 380,440 210,480" fill="none" stroke="#64748B" strokeWidth="1" />
-          <polygon points="320,230 540,240 510,470 380,440" fill="none" stroke="#94A3B8" strokeWidth="1" strokeDasharray="3 3" />
-          <circle cx="240" cy="110" r="3.5" fill="#38BDF8" />
-          <circle cx="320" cy="230" r="3.5" fill="#38BDF8" />
-          <circle cx="140" cy="280" r="2.5" fill="#94A3B8" />
-          <circle cx="380" cy="440" r="2.5" fill="#94A3B8" />
-          <line x1="240" y1="110" x2="320" y2="230" stroke="#38BDF8" strokeWidth="1" strokeOpacity="0.4" />
-        </svg>
-
-        <div className="login-brandmark">
-          <span className="login-brandmark-badge" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
+    <div className="login-screen-page">
+      <header className="login-institutional-header">
+        <div className="login-header-identity">
+          <span className="login-header-emblem" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
+              <path d="M4 4h16v16H4zM8 4v16M12 4v16M16 4v16M4 8h16M4 12h16M4 16h16" />
             </svg>
           </span>
-          <div>
-            <span className="login-brandmark-name">Bhoomi Intel<span className="login-ps-chip">PS-26018</span></span>
-            <div className="login-brandmark-sub">SIH 2026 • Intelligent Cadastral Extraction</div>
-          </div>
+          <span className="login-header-name">BHOOMI INTEL</span>
+          <span className="login-header-divider" aria-hidden="true">|</span>
+          <span className="login-header-chip">PS-26018</span>
+          <span className="login-header-description">National Land Records Modernization Cadastre Verification</span>
         </div>
-
-        <div>
-          <span className="login-env-pill"><span className="login-env-dot" aria-hidden="true" />Secure officer workspace</span>
-          <h1>Land Record Intelligence</h1>
-          <p className="login-lede">From legacy documents to structured, review-ready records.</p>
-          <div className="login-pillars">
-            <span className="login-pillar"><span className="login-pillar-assist" aria-hidden="true">●</span>AI-assisted</span>
-            <span className="sep" aria-hidden="true">•</span>
-            <span className="login-pillar"><span className="login-pillar-human" aria-hidden="true">●</span>Human verified</span>
-            <span className="sep" aria-hidden="true">•</span>
-            <span className="login-pillar"><span className="login-pillar-audit" aria-hidden="true">●</span>Audit ready</span>
-          </div>
-          <div className="login-pipeline-card">
-            <div className="login-pipeline-head"><span>OCR INGESTION PIPELINE</span><span className="active">OCR • EXTRACTION • VALIDATION</span></div>
-            <p>Reads land records, flags what needs checking, and keeps a verified officer in control of every decision.</p>
-          </div>
+        <div className="login-header-security">
+          <span className="login-secure-status"><span aria-hidden="true" />GATEWAY-SECURE</span>
+          <span className="login-header-divider" aria-hidden="true">|</span>
+          <span>TLS 1.3 / SHA-256</span>
         </div>
+      </header>
 
-        <div className="login-brand-foot">
-          <span className="login-live"><span className="login-live-dot" aria-hidden="true" />SIH 2026 • PS-26018</span>
-          <span>Role-based access • Full audit trail</span>
-        </div>
-      </section>
-
-      <section className="login-panel" aria-label="Sign in">
-        <div className="login-context">
-          <span className="login-context-crumb">
-            <span className="login-context-dot" aria-hidden="true" />
-            <span>National Cadastre Portal</span>
-            <span className="sep">/</span>
-            <strong>Adjudication Console</strong>
-          </span>
-        </div>
-
-        <div className="login-form-wrap">
-          <span className="login-gateway">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+      <main className="login-screen-main">
+        <div className="login-screen-shell">
+          <section className="login-institutional-panel" aria-label="Land Record Intelligence">
+            <svg className="login-cadastre-linework" viewBox="0 0 520 740" fill="none" aria-hidden="true">
+              <polygon points="35,50 185,35 245,165 75,200" stroke="currentColor" strokeDasharray="4 4" strokeWidth="1.2" />
+              <polygon points="185,35 460,25 500,225 245,165" stroke="currentColor" strokeWidth="1.2" />
+              <polygon points="75,200 245,165 315,415 105,465" stroke="currentColor" strokeWidth="1.8" />
+              <polygon points="245,165 500,225 475,475 315,415" stroke="currentColor" strokeDasharray="5 3" strokeWidth="1.2" />
+              <polygon points="105,465 315,415 285,680 65,615" stroke="currentColor" strokeWidth="1.2" />
+              <polygon points="315,415 475,475 460,710 285,680" stroke="currentColor" strokeWidth="1.2" />
+              <circle cx="185" cy="35" r="3.5" fill="#38bdf8" />
+              <circle cx="245" cy="165" r="3" fill="white" />
+              <circle cx="315" cy="415" r="4" fill="#38bdf8" />
+              <circle cx="105" cy="465" r="3" fill="white" />
+              <circle cx="475" cy="475" r="3" fill="white" />
+              <path d="M185 35 315 415M75 200l400 275" stroke="#38bdf8" strokeDasharray="3 3" />
             </svg>
-            Officer Verification Gateway
-          </span>
-          <h2>Sign in</h2>
-          <p className="login-sub">Access your land-record digitization workspace.</p>
+            <div className="login-institutional-content">
+              <div className="login-left-rail">
+                <span className="login-left-rail-mark" aria-hidden="true" />
+                <span>OFFICIAL CADASTRAL GATEWAY</span>
+              </div>
+              <div className="login-left-kicker"><span aria-hidden="true" />AI PROPOSES • RULES VALIDATE • HUMANS DECIDE</div>
+              <h1>Land Records Intelligence<br />System</h1>
+              <p className="login-left-description">Unified authentication interface for jurisdictional cadastral officers and authorized public land record inquiries.</p>
 
-          <Alert tone="error" title="Authentication failed">{error}</Alert>
-          {registered && !error && (
-            <Alert tone="success" title="Account created">Sign in with your email and password.</Alert>
-          )}
+              <div className="login-access-matrix">
+                <div className="login-access-title">ACCESS MATRIX BY ROLE</div>
+                <div className="login-access-card">
+                  <div className="login-access-card-head">
+                    <div className="login-access-card-name"><span className="login-access-icon" aria-hidden="true">✓</span>Officer / Operator</div>
+                    <span className="login-access-badge login-access-badge-active">Full Action</span>
+                  </div>
+                  <ul>
+                    <li>Upload &amp; batch OCR land deeds</li>
+                    <li>Review polygon overlaps &amp; mutate titles</li>
+                    <li>Approve or reject cadastral survey discrepancies</li>
+                  </ul>
+                </div>
+                <div className="login-access-card login-access-card-muted">
+                  <div className="login-access-card-head">
+                    <div className="login-access-card-name"><span className="login-access-icon" aria-hidden="true">◉</span>Citizen / Read-Only</div>
+                    <span className="login-access-badge">Audit Only</span>
+                  </div>
+                  <ul>
+                    <li>Search gazetted parcels by Khasra / Survey No</li>
+                    <li>Inspect sanitized public title extracts</li>
+                    <li>No modification, override, or approval permissions</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+            <div className="login-institutional-footer">
+              <span>DEPT. OF LAND RESOURCES</span><span aria-hidden="true">•</span><span>SIH 2026</span>
+            </div>
+          </section>
 
-          <form className="login-form" onSubmit={submit} noValidate>
-            <TextInput
-              label="Official Email"
-              hint="Official email address"
-              id="login-email"
-              type="email"
-              autoComplete="email"
-              placeholder="officer@example.com"
-              value={email}
-              disabled={busy}
-              error={emailError}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-            <TextInput
-              label="Password / Secure Token"
-              id="login-password"
-              type={showPassword ? "text" : "password"}
-              autoComplete="current-password"
-              placeholder="••••••••••••"
-              value={password}
-              disabled={busy}
-              error={passwordError}
-              onChange={(e) => setPassword(e.target.value)}
-              trailing={
-                <button
-                  type="button"
-                  onClick={() => setShowPassword((v) => !v)}
-                  aria-label={showPassword ? "Hide password" : "Show password"}
-                  aria-pressed={showPassword}
-                  tabIndex={0}
-                >
-                  {showPassword ? (
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden="true">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
-                    </svg>
-                  ) : (
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden="true">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                  )}
-                </button>
-              }
-            />
-            <Button type="submit" variant="primary" fullWidth disabled={busy} className="login-submit">
-              {busy ? (
-                <>
-                  <svg className="login-submit-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                    <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" opacity="0.25" />
-                    <path d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" fill="currentColor" />
-                  </svg>
-                  Signing in…
-                </>
-              ) : (
-                <>
-                  Sign in
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-                  </svg>
-                </>
-              )}
-            </Button>
-            <p className="login-secure-note">Secure access to your document-processing workspace.</p>
-            <p className="login-secure-note">New here? <a href="#/auth">Create your workspace account</a></p>
-          </form>
+          <section className="login-screen-workspace" aria-label="Sign in">
+            <svg className="login-workspace-linework" viewBox="0 0 740 820" preserveAspectRatio="none" fill="none" aria-hidden="true">
+              <g opacity=".08" stroke="#0f5e91" strokeWidth="1.3">
+                <path d="M420-30C510 40 590 110 770 100M440 20C530 90 620 160 780 150M470 70C560 140 640 220 780 210M500 120C590 200 660 280 780 270" />
+              </g>
+              <g opacity=".07" stroke="#087f78" strokeWidth="1.2">
+                <polygon points="90,40 310,25 380,145 170,170" /><polygon points="310,25 610,15 640,175 380,145" />
+                <polygon points="380,145 640,175 590,410 340,370" strokeDasharray="4 3" /><polygon points="170,170 380,145 340,370 130,400" />
+                <polygon points="130,400 340,370 300,670 80,600" /><polygon points="340,370 590,410 560,710 300,670" strokeDasharray="5 3" />
+              </g>
+              <g opacity=".12" stroke="#0f5e91"><path d="M170 165v10M165 170h10M380 140v10M375 145h10M340 365v10M335 370h10" /><circle cx="310" cy="25" r="2.5" fill="#0f5e91" /><circle cx="380" cy="145" r="2.5" fill="#087f78" /><circle cx="340" cy="370" r="2.5" fill="#0f5e91" /></g>
+            </svg>
+            <div className="login-auth-card">
+              <div className="login-auth-card-body">
+                <div className="login-auth-rail">
+                  <div className="login-auth-rail-left">
+                    <span className="login-auth-gateway">OFFICIAL CADASTRAL GATEWAY</span>
+                    <span className="login-auth-rail-signal"><span aria-hidden="true" />AI PROPOSES • RULES VALIDATE • HUMANS DECIDE</span>
+                  </div>
+                  <span className="login-auth-secure"><span aria-hidden="true" />SECURE FORM</span>
+                </div>
+
+                <div className="login-profile-context">
+                  <div className="login-profile-label">WORKSPACE PROFILE CONTEXT</div>
+                  <div className="login-role-switcher" role="radiogroup" aria-label="Workspace profile context">
+                    <button
+                      type="button"
+                      role="radio"
+                      className={`login-role-card ${selectedRole === "officer" ? "login-role-card-selected" : ""}`}
+                      aria-checked={selectedRole === "officer"}
+                      onClick={() => setSelectedRole("officer")}
+                    >
+                      <span className="login-role-radio" aria-hidden="true">{selectedRole === "officer" && <span />}</span>
+                      <span><strong>Government Officer / Operator</strong><small>Revenue Console / Full Mutation</small></span>
+                    </button>
+                    <button
+                      type="button"
+                      role="radio"
+                      className={`login-role-card ${selectedRole === "public" ? "login-role-card-selected" : ""}`}
+                      aria-checked={selectedRole === "public"}
+                      onClick={() => setSelectedRole("public")}
+                    >
+                      <span className="login-role-radio" aria-hidden="true">{selectedRole === "public" && <span />}</span>
+                      <span><strong>Public / Read-Only User</strong><small>Title Extracts / Cadastral Inquiry</small></span>
+                    </button>
+                  </div>
+                </div>
+
+                <div className="login-permission-banner" role="note">
+                  <span className="login-info-icon" aria-hidden="true">i</span>
+                  <span>Operator permissions enabled: Deed ingestion, parcel polygon reconciliation, and title mutation approvals.</span>
+                </div>
+
+                {error && <Alert tone="error" title="Authentication failed">{error}</Alert>}
+                {registered && !error && <Alert tone="success" title="Account created">Sign in with your email and password.</Alert>}
+
+                <form className="login-screen-form" onSubmit={submit} noValidate>
+                  <div className="login-screen-field">
+                    <div className="login-screen-field-label"><label htmlFor="login-email">Official Email / Institutional ID</label><span>@gov.in or registered domain</span></div>
+                    <div className="login-screen-input-wrap">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="m4 7 8 6 8-6" /></svg>
+                      <input id="login-email" type="email" autoComplete="email" placeholder="officer.name@nic.in" value={email} disabled={busy} aria-invalid={!!emailError} onChange={(e) => setEmail(e.target.value)} />
+                      <span aria-hidden="true">@</span>
+                    </div>
+                    {emailError && <p className="login-screen-field-error">{emailError}</p>}
+                  </div>
+                  <div className="login-screen-field">
+                    <div className="login-screen-field-label"><label htmlFor="login-password">Password</label></div>
+                    <div className="login-screen-input-wrap">
+                      <input id="login-password" type={showPassword ? "text" : "password"} autoComplete="current-password" placeholder="Enter authorized password" value={password} disabled={busy} aria-invalid={!!passwordError} onChange={(e) => setPassword(e.target.value)} />
+                      <button type="button" onClick={() => setShowPassword((v) => !v)} aria-label={showPassword ? "Hide password" : "Show password"} aria-pressed={showPassword}>
+                        {showPassword ? <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><path d="M3 3l18 18M10.6 10.6a2 2 0 0 0 2.8 2.8M9.9 5.2A10.8 10.8 0 0 1 12 5c4.5 0 8.4 2.8 10 7-.5 1.3-1.3 2.5-2.3 3.5M6.2 6.2C4.3 7.3 2.9 9.3 2 12c1.6 4.2 5.5 7 10 7 1.1 0 2.1-.2 3-.5" /></svg> : <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z" /><circle cx="12" cy="12" r="3" /></svg>}
+                      </button>
+                    </div>
+                    {passwordError && <p className="login-screen-field-error">{passwordError}</p>}
+                  </div>
+
+                  <div className="login-session-notice" role="note">
+                    <span aria-hidden="true">!</span><div><strong>Institutional Session Notice:</strong> Sessions are authenticated through the secure gateway and recorded in the application audit trail.</div>
+                  </div>
+
+                  <Button type="submit" variant="primary" fullWidth disabled={busy} className="login-screen-submit">
+                    {busy ? <><svg className="login-submit-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" opacity=".25" /><path d="M4 12a8 8 0 0 1 8-8V0C5.4 0 0 5.4 0 12h4Z" fill="currentColor" /></svg>Signing in…</> : <><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M10 17l5-5-5-5M15 12H3M21 4v16" /></svg>Sign In to Revenue Console<span className="login-enter-key">↵ Enter</span></>}
+                  </Button>
+                </form>
+
+                <div className="login-create-account">
+                  <div><strong>New to Bhoomi Intel?</strong><span>Institutional onboarding &amp; public access registry</span></div>
+                  <a href="#/sign-in">Create Account <span aria-hidden="true">→</span></a>
+                </div>
+              </div>
+              <div className="login-auth-card-footer">
+                <span><i aria-hidden="true" />Statutory Audit Logging Active</span>
+                <span className="login-footer-links">• Security Guidelines &nbsp; • Helpdesk &amp; Support</span>
+              </div>
+            </div>
+          </section>
         </div>
+      </main>
 
-        <div className="login-foot">
-          <span><span className="login-node-chip">SIH 2026 • PS-26018</span></span>
-          <span>Strictly authorized personnel only</span>
-        </div>
-      </section>
+      <footer className="login-technical-footer">
+        <span>BHOOMI INTEL PROTOCOL • PORTAL: AUTH_SV_26</span>
+        <span>SMART INDIA HACKATHON 2026 • PS-26018</span>
+      </footer>
     </div>
   );
 }

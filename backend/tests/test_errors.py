@@ -1,6 +1,7 @@
 """Error-envelope contract and leakage protections."""
 
 import asyncio
+import logging
 
 from starlette.requests import Request
 from starlette.exceptions import HTTPException as StarletteHTTPException
@@ -40,3 +41,9 @@ def test_unhandled_error_does_not_leak_exception_text_or_traceback(caplog):
     assert secret not in response.body.decode()
     assert secret not in caplog.text
     assert b"INTERNAL_ERROR" in response.body
+
+
+def test_transport_loggers_do_not_emit_info_urls():
+    """Provider query-string credentials must not appear in INFO logs."""
+    assert logging.getLogger("httpx").level >= logging.WARNING
+    assert logging.getLogger("httpcore").level >= logging.WARNING
