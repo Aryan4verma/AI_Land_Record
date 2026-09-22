@@ -123,8 +123,8 @@ IN PROGRESS
 # 5. Next Tasks
 
 ```text
-1. Hosted deploy execution: push backend (Procfile) + frontend (Vercel/Netlify
-   + VITE_API_URL) with production env separation, then hosted smoke tests
+1. Deploy and verify the single Vercel `Dockerfile.vercel` image with
+   same-origin FastAPI/React serving and production env separation
 2. Permanent frontend via Google Stitch (API contracts proven; QA app is
    disposable reference)
 2. Grow dataset toward 30–50 with real collected samples + human-verified
@@ -1925,6 +1925,30 @@ Verification: backend 299 passed + 1 skipped, focused final OCR/processing/demo
 44 passed, frontend 167 passed, typecheck/lint/build clean, secret scan clean,
 FastAPI /health startup smoke passed. Docker image build remains unverified
 because Docker Desktop's Linux engine is not running on the current host.
+```
+
+## Decision 2026-09-22 — Single Vercel deployment
+
+```text
+The active hosted architecture is one root Vercel project using
+Dockerfile.vercel. A multi-stage image builds the React/Vite bundle with npm
+ci/npm run build, installs Python 3.12 and Tesseract 5 (eng/hin/guj), and
+serves the bundle plus FastAPI /api routes from the same process and origin.
+Supabase remains the only persistent store; no Render or separate static
+frontend service is part of the active deployment.
+
+Production sets PROCESSING_REQUEST_BOUND=true. The process endpoint then runs
+the complete pipeline inside the request invocation and returns the persisted
+job state, while local development retains the existing BackgroundTask path.
+The recorded fixture-backed full-pipeline run took 4.73 seconds locally in
+this verification, and the previously observed live fixture run took about
+11.5 seconds; no Gemini/OpenRouter request was made in this pass.
+
+Verification: frontend 167 tests, typecheck/lint/build clean; backend 301
+passed + 1 skipped; same-origin root, nested HTML fallback, static asset, and
+API 404 smoke checks passed; secret scan and git diff --check passed. Docker
+image build remains blocked because Docker Desktop's Linux engine is not
+running on the current host.
 ```
 
 # END OF MEMORY.md

@@ -164,9 +164,11 @@
 }
 @media (max-width: 900px) { .processing-main-grid { grid-template-columns: 1fr; } }
 @media (max-width: 900px) {
+  .processing-meta-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 600px) {
   .processing-dossier-head { padding: var(--space-md); }
   .processing-dossier-context h1, .processing-dossier-context p { white-space: normal; }
-  .processing-meta-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .processing-track-steps { align-items: flex-start; flex-direction: column; }
   .processing-track-steps > b { display: none; }
   .processing-entity-row { grid-template-columns: 1fr; gap: 2px; }

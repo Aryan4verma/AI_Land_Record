@@ -33,7 +33,11 @@ import type {
   User,
 } from "./types";
 
-const DEFAULT_API_URL = (import.meta.env.VITE_API_URL || "http://127.0.0.1:8000").replace(/\/$/, "");
+// Production is served by the same FastAPI process as the Vite bundle. Local
+// Vite development keeps its existing separate-backend default, while an
+// explicit VITE_API_URL remains available for QA and non-standard hosting.
+const configuredApiUrl = import.meta.env.VITE_API_URL || "";
+const DEFAULT_API_URL = (configuredApiUrl || (import.meta.env.PROD ? "" : "http://127.0.0.1:8000")).replace(/\/$/, "");
 
 /** Backend error with the request_id preserved for traceability. */
 export class ApiError extends Error {

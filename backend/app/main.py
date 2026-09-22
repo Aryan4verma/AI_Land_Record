@@ -5,9 +5,12 @@ Covers: structure, config/env, DB connection, startup, health endpoints,
 """
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
 from .auth.router import router as auth_router
 from .config import get_settings
@@ -31,6 +34,11 @@ def validate_auth_secret(secret: str) -> None:
     normalized = (secret or "").strip()
     if len(normalized) < _MIN_AUTH_SECRET_LENGTH or normalized.lower() in {"changeme", "change-me", "test"}:
         raise RuntimeError("AUTH_SECRET must be a random value of at least 32 characters.")
+
+
+def _frontend_dist() -> Path:
+    """Resolve the optional production bundle in both local and container layouts."""
+    return Path(__file__).resolve().parents[2] / "frontend" / "dist"
 
 
 @asynccontextmanager
@@ -79,6 +87,34 @@ def create_app() -> FastAPI:
     app.include_router(processing_router)
     app.include_router(reviews_router)
     app.include_router(records_router)
+
+    # The Vercel container is intentionally same-origin: FastAPI serves the
+    # built Vite bundle and keeps all /api routes behind the existing auth/RBAC
+    # boundary. Only install this fallback when a production build is present,
+    # so the backend remains usable on its own during local development/tests.
+    frontend_dist = _frontend_dist()
+    frontend_index = frontend_dist / "index.html"
+    if frontend_index.is_file():
+        assets_dir = frontend_dist / "assets"
+        if assets_dir.is_dir():
+            app.mount("/assets", StaticFiles(directory=assets_dir), name="frontend-assets")
+
+        @app.get("/{full_path:path}", include_in_schema=False)
+        def serve_frontend(full_path: str, request: Request):
+            if full_path == "api" or full_path.startswith("api/"):
+                raise HTTPException(status_code=404, detail="Not found")
+            root = frontend_dist.resolve()
+            requested = (root / full_path).resolve()
+            if requested != root and root not in requested.parents:
+                raise HTTPException(status_code=404, detail="Not found")
+            if requested.is_file():
+                return FileResponse(requested)
+            # Preserve the backend's 404 contract for API/CLI clients. A
+            # browser navigation advertises HTML and receives the SPA shell.
+            if full_path and "text/html" not in request.headers.get("accept", ""):
+                raise HTTPException(status_code=404, detail="Not found")
+            return FileResponse(frontend_index)
+
     return app
 
 

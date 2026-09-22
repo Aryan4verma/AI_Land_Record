@@ -25,7 +25,7 @@ AI extraction package is named `extract`, and there is no separate
 ```text
 ai-land-records/
 ├── 00_MASTER.md … 14_UI_UX_SPECIFICATION.md, MEMORY.md, AGENTS.md
-├── frontend/            # Vite + React QA app (disposable; Stitch replaces it)
+├── frontend/            # Vite + React application, built into the Vercel image
 ├── backend/
 │   ├── app/             # FastAPI app (auth, documents, processing, records, reviews, ai)
 │   ├── scripts/         # smoke_gemini.py, verify_failover.py
@@ -73,6 +73,7 @@ AI_PROVIDER / AI_MODEL / AI_TIMEOUT_SECONDS / AI_FALLBACKS
 AI_CACHE_ENABLED / AI_CACHE_TTL_SECONDS / AI_CACHE_MAX_ENTRIES
 ENVIRONMENT / FRONTEND_ORIGINS / LOG_LEVEL
 DEMO_MODE (server-side flag; use true only for a labelled fixture-backed demo)
+PROCESSING_REQUEST_BOUND (true for the single-container Vercel deployment)
 ```
 
 Actual values must never be committed. The ignored local `opencode.json` may
@@ -96,9 +97,9 @@ npm run dev        # serves on http://localhost:5173
 npm run build      # production bundle into frontend/dist/
 ```
 
-Deployed builds talk to the backend URL baked in at build time via
-`VITE_API_URL` (defaults to `http://127.0.0.1:8000`; still overridable
-in-app for QA).
+Deployed builds use same-origin API requests because FastAPI serves the built
+bundle. Local Vite development defaults to `http://127.0.0.1:8000`; an
+explicit `VITE_API_URL` remains available for QA.
 
 ## Backend
 
@@ -112,8 +113,10 @@ python -m uvicorn app.main:app --reload --port 8000
 python -m pytest -q
 ```
 
-Hosted start (Procfile): `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
-with `runtime.txt` pinning the Python version.
+The single deployment is built by the root `Dockerfile.vercel`. It installs
+the frontend and backend into one image, installs Tesseract 5 plus `eng`,
+`hin`, and `guj`, and starts
+`uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}`.
 
 ## AI/OCR tooling (separate venv)
 
@@ -222,10 +225,9 @@ Frontend
 
 ```text
 Database
-→ backend
 → storage
-→ AI configuration
-→ frontend
+→ Vercel environment variables
+→ one Vercel Docker deployment
 → smoke tests
 ```
 
@@ -347,6 +349,16 @@ replays known OCR/extraction output and keeps validation, persistence, review,
 approval, and audit real. It never claims that an external AI request ran.
 
 Demo mode is an emergency reliability mechanism.
+
+## 15. Vercel single-deployment constraints
+
+`Dockerfile.vercel` is the source of truth for the hosted image. The final
+FastAPI process serves the React bundle and `/api/*` from the same origin;
+there is no Render or separate static frontend service in the active design.
+`PROCESSING_REQUEST_BOUND=true` makes the processing endpoint run its complete
+pipeline before returning, because detached `BackgroundTasks` are not a
+durable queue. Supabase remains the only persistent state store and atomic
+processing RPC remains the business-result transaction boundary.
 
 It may use preprocessed/cached demonstration results.
 

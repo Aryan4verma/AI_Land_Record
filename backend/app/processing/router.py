@@ -1,10 +1,10 @@
 """Document processing endpoints (10 section 3).
 
 POST /process accepts the job (202) and runs the pipeline as a
-BackgroundTask — long OCR/LLM work never blocks the response. Progress is
-observable via processing_jobs rows and GET /status. Only the pipeline
-runner construction is injectable, so tests assert acceptance without
-running AI.
+BackgroundTask in the normal local deployment. Vercel container deployments
+can opt into request-bound execution so the platform cannot terminate the
+pipeline immediately after the response is sent. Progress is observable via
+processing_jobs rows and GET /status.
 """
 from uuid import UUID
 
@@ -131,6 +131,16 @@ def start_processing(
                 # reconciliation remains the last-resort recovery path.
                 pass
         raise
+    settings = get_settings()
+    if settings.processing_request_bound:
+        # Do not detach durable work from a serverless/container invocation.
+        # run_pipeline owns failure classification and persists the terminal
+        # job/document state before this request returns.
+        run(str(job["id"]), str(document["id"]), user["id"],  # type: ignore[arg-type]
+            mode, document.get("checksum"))
+        finished = jobs.get_job(str(job["id"])) or job
+        return {"job_id": finished["id"], "status": finished["status"]}
+
     background_tasks.add_task(run, str(job["id"]), str(document["id"]), user["id"],  # type: ignore[arg-type]
                               mode, document.get("checksum"))
     return {"job_id": job["id"], "status": job["status"]}

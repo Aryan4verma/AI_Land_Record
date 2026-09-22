@@ -56,6 +56,11 @@ class Settings(BaseSettings):
     demo_mode: bool = False
     demo_fixture_directory: str = ""  # blank -> <repo>/demo/fixtures
 
+    # Vercel container deployments must keep the complete pipeline inside the
+    # request invocation.  Local development keeps the existing BackgroundTask
+    # acceptance behaviour unless this is explicitly enabled.
+    processing_request_bound: bool = False
+
     @field_validator("frontend_origins")
     @classmethod
     def reject_wildcard_origins(cls, value: str) -> str:

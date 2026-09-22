@@ -19,6 +19,7 @@ from app.ai.types import ExtractionResult, FieldResult  # noqa: E402
 from app.errors import AppError  # noqa: E402
 from app.main import app  # noqa: E402
 from app.processing import pipeline as pipeline_module  # noqa: E402
+from app.processing import router as processing_router_module  # noqa: E402
 from app.processing.pipeline import PipelineDeps, run_pipeline  # noqa: E402
 from app.processing.router import get_pipeline_runner  # noqa: E402
 from app.processing.stores import get_job_store  # noqa: E402
@@ -563,6 +564,30 @@ def test_process_endpoint_accepts_and_runs_background(client, world, monkeypatch
         assert response.status_code == 202
         assert response.json()["status"] == "PENDING"
         assert len(calls) == 1 and calls[0][1] == DOC_ID and calls[0][2] != ""
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_process_endpoint_can_bind_pipeline_to_request(client, world, monkeypatch):
+    """The Vercel deployment must not detach work after returning 202."""
+    jobs = world["jobs"]
+
+    def fake_run(job_id, document_id, user_id, mode="live", checksum=None):
+        jobs.update_job(job_id, {"status": "SUCCEEDED"})
+
+    app.dependency_overrides[get_document_store] = lambda: world["docs"]
+    app.dependency_overrides[get_job_store] = lambda: jobs
+    app.dependency_overrides[get_pipeline_runner] = lambda: fake_run
+    monkeypatch.setattr(
+        processing_router_module,
+        "get_settings",
+        lambda: type("Settings", (), {"demo_mode": False, "processing_request_bound": True})(),
+    )
+    try:
+        headers = {"Authorization": f"Bearer {_token(client)}"}
+        response = client.post(f"/api/v1/documents/{DOC_ID}/process", headers=headers)
+        assert response.status_code == 202
+        assert response.json()["status"] == "SUCCEEDED"
     finally:
         app.dependency_overrides.clear()
 
